@@ -1,0 +1,15 @@
+# Build artifacts
+.build/
+*.xcodeproj
+DerivedData/
+
+# macOS
+.DS_Store
+
+# Local-only assets (not distributed):
+# - AppIcon.icns may be a personal icon; the build script generates the default
+#   artwork automatically when this file is absent (Scripts/make_icon.swift).
+# - headphones.png is an optional personal hero photo shown in the app header.
+Sources/XM6Control/Resources/AppIcon.icns
+Sources/XM6Control/Resources/headphones.png
+.claude/
