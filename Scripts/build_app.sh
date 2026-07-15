@@ -40,7 +40,9 @@ if [ -f "Sources/XM6Control/Resources/headphones.png" ]; then
     cp "Sources/XM6Control/Resources/headphones.png" "${APP_DIR}/Contents/Resources/headphones.png"
 fi
 
-if security find-identity -p codesigning -v 2>/dev/null | grep -q "${SIGN_IDENTITY}"; then
+# No -v flag: self-signed certs report CSSMERR_TP_NOT_TRUSTED (filtered by -v)
+# yet still sign successfully.
+if security find-identity -p codesigning 2>/dev/null | grep -q "\"${SIGN_IDENTITY}\""; then
     echo "==> Signing with ${SIGN_IDENTITY} (stable identity, no permission re-prompts)..."
     codesign --force --deep --sign "${SIGN_IDENTITY}" "${APP_DIR}"
 else
