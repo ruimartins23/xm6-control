@@ -302,14 +302,19 @@ public enum SonyCommands {
         [Opcode.autoPowerFamilyGet, Subtype.automaticPowerOffDuration]
     }
 
+    /// XM6 quirk: reads come from the POWER family (0x26/0x27) but writes must go to
+    /// the SYSTEM family (0xf8) -- the XM6-verified reference explicitly overrides the
+    /// command byte for this one parameter. Writes to 0x28 are silently ignored.
+    /// Layout: [cmd, 0x05, element, lastSelectedElement]; the reference always sends
+    /// 0x00 as the trailing byte.
     public static func buildAutomaticPowerOffSet(_ mode: AutomaticPowerOffMode) -> [UInt8] {
-        let (b1, b2) = mode.code
-        return [Opcode.autoPowerFamilySet, Subtype.automaticPowerOffDuration, b1, b2]
+        [Opcode.buttonModeFamilySet, Subtype.automaticPowerOffDuration, mode.rawValue, 0x00]
     }
 
     public static func decodeAutomaticPowerOff(_ payload: [UInt8]) -> AutomaticPowerOffMode? {
         guard payload.count == 4, payload[1] == Subtype.automaticPowerOffDuration else { return nil }
-        return AutomaticPowerOffMode.from(payload[2], payload[3])
+        // payload[3] is "last selected element", not part of the current mode.
+        return AutomaticPowerOffMode(rawValue: payload[2])
     }
 
     static func isAutomaticPowerOffReply(opcode: UInt8) -> Bool {

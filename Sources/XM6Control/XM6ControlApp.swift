@@ -23,7 +23,7 @@ struct XM6ControlApp: App {
             CompactControlsView()
                 .environmentObject(controller)
         } label: {
-            Image(systemName: "headphones")
+            Image(systemName: "headphones.circle.fill")
         }
         .menuBarExtraStyle(.window)
 
