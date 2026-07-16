@@ -23,7 +23,7 @@ struct ContentView: View {
             // the main window is reopened from the menu bar; reconnecting over a live
             // connection tears the session down (and can trip a fresh TCC Bluetooth
             // check mid-flight, which killed the app once).
-            if controller.connectionState == .disconnected {
+            if controller.connectionState == .disconnected && !ProbeMode.active {
                 controller.autoConnect()
             }
         }

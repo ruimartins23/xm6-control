@@ -5,6 +5,10 @@ import SonyHeadphonesKit
 struct XM6ControlApp: App {
     @StateObject private var controller = HeadphonesController()
 
+    init() {
+        ProbeMode.runIfRequested()
+    }
+
     var body: some Scene {
         WindowGroup(id: "main") {
             ContentView()

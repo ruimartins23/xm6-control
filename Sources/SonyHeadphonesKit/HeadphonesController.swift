@@ -113,6 +113,16 @@ public final class HeadphonesController: ObservableObject {
         requestFullState()
     }
 
+    // MARK: - Raw access (developer tooling)
+
+    /// Called for every decoded inbound message; used by the XM6Probe tool.
+    public var rawMessageHandler: ((SonyMessageType, [UInt8]) -> Void)?
+
+    /// Queues a raw payload; used by the XM6Probe tool to verify command layouts.
+    public func sendRaw(_ payload: [UInt8], type: SonyMessageType = .command1) {
+        enqueue(payload, type: type)
+    }
+
     public func setAmbientSound(_ state: AmbientSoundState) {
         ambientSound = state // optimistic; a NOTIFY will reconcile if the device disagrees
         enqueue(SonyCommands.buildAmbientSoundSet(state))
@@ -276,6 +286,8 @@ public final class HeadphonesController: ObservableObject {
         // replies unacknowledged and it stops responding to further requests.
         let ackSeq = message.sequenceNumber ^ 0x01
         send(SonyMessage(type: .ack, sequenceNumber: ackSeq, payload: []), note: "ack")
+
+        rawMessageHandler?(message.type, message.payload)
 
         guard let event = SonyEventDecoder.decode(payload: message.payload, messageType: message.type) else { return }
         apply(event)
