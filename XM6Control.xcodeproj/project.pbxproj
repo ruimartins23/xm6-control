@@ -1,0 +1,189 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		100000000000000000000001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* ContentView.swift */; };
+		100000000000000000000002 /* ProbeMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* ProbeMode.swift */; };
+		100000000000000000000003 /* XM6ControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* XM6ControlApp.swift */; };
+		100000000000000000000004 /* XM6SystemActionBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000004 /* XM6SystemActionBridge.swift */; };
+		100000000000000000000005 /* CardBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000005 /* CardBackground.swift */; };
+		100000000000000000000006 /* CompactControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000006 /* CompactControlsView.swift */; };
+		100000000000000000000007 /* ConnectingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000007 /* ConnectingView.swift */; };
+		100000000000000000000008 /* ConnectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000008 /* ConnectionCard.swift */; };
+		100000000000000000000009 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000009 /* DashboardView.swift */; };
+		10000000000000000000000A /* DesktopWidgetWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000A /* DesktopWidgetWindow.swift */; };
+		10000000000000000000000B /* DisconnectedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* DisconnectedView.swift */; };
+		10000000000000000000000C /* EqualizerCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* EqualizerCard.swift */; };
+		10000000000000000000000D /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000D /* HeaderView.swift */; };
+		10000000000000000000000E /* HeadphoneImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000E /* HeadphoneImage.swift */; };
+		10000000000000000000000F /* ListeningModeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000F /* ListeningModeCard.swift */; };
+		100000000000000000000010 /* NoiseControlCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000010 /* NoiseControlCard.swift */; };
+		100000000000000000000011 /* SpeakToChatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000011 /* SpeakToChatCard.swift */; };
+		100000000000000000000012 /* WearDetectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000012 /* WearDetectionCard.swift */; };
+		100000000000000000000013 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* AppIcon.icns */; };
+		100000000000000000000014 /* XM6ControlWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000014 /* XM6ControlWidgets.swift */; };
+		100000000000000000000015 /* SonyHeadphonesKit in Frameworks */ = {isa = PBXBuildFile; productRef = A00000000000000000000001 /* SonyHeadphonesKit */; };
+		100000000000000000000016 /* XM6SystemIntegration in Frameworks */ = {isa = PBXBuildFile; productRef = A00000000000000000000002 /* XM6SystemIntegration */; };
+		100000000000000000000017 /* XM6SystemIntegration in Frameworks */ = {isa = PBXBuildFile; productRef = A00000000000000000000003 /* XM6SystemIntegration */; };
+		100000000000000000000018 /* XM6ControlWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* XM6ControlWidgets.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		300000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 400000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 500000000000000000000002;
+			remoteInfo = XM6ControlWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		600000000000000000000001 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				100000000000000000000018 /* XM6ControlWidgets.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		200000000000000000000001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		200000000000000000000002 /* ProbeMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProbeMode.swift; sourceTree = "<group>"; };
+		200000000000000000000003 /* XM6ControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XM6ControlApp.swift; sourceTree = "<group>"; };
+		200000000000000000000004 /* XM6SystemActionBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XM6SystemActionBridge.swift; sourceTree = "<group>"; };
+		200000000000000000000005 /* CardBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardBackground.swift; sourceTree = "<group>"; };
+		200000000000000000000006 /* CompactControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactControlsView.swift; sourceTree = "<group>"; };
+		200000000000000000000007 /* ConnectingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectingView.swift; sourceTree = "<group>"; };
+		200000000000000000000008 /* ConnectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionCard.swift; sourceTree = "<group>"; };
+		200000000000000000000009 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		20000000000000000000000A /* DesktopWidgetWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopWidgetWindow.swift; sourceTree = "<group>"; };
+		20000000000000000000000B /* DisconnectedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisconnectedView.swift; sourceTree = "<group>"; };
+		20000000000000000000000C /* EqualizerCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EqualizerCard.swift; sourceTree = "<group>"; };
+		20000000000000000000000D /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
+		20000000000000000000000E /* HeadphoneImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadphoneImage.swift; sourceTree = "<group>"; };
+		20000000000000000000000F /* ListeningModeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningModeCard.swift; sourceTree = "<group>"; };
+		200000000000000000000010 /* NoiseControlCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoiseControlCard.swift; sourceTree = "<group>"; };
+		200000000000000000000011 /* SpeakToChatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakToChatCard.swift; sourceTree = "<group>"; };
+		200000000000000000000012 /* WearDetectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearDetectionCard.swift; sourceTree = "<group>"; };
+		200000000000000000000013 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		200000000000000000000014 /* XM6ControlWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XM6ControlWidgets.swift; sourceTree = "<group>"; };
+		200000000000000000000015 /* XM6 Control.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "XM6 Control.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		200000000000000000000016 /* XM6ControlWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = XM6ControlWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		700000000000000000000001 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (100000000000000000000015, 100000000000000000000016, ); runOnlyForDeploymentPostprocessing = 0; };
+		700000000000000000000002 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (100000000000000000000017, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		800000000000000000000001 = {
+			isa = PBXGroup;
+			children = (800000000000000000000002 /* XM6Control */, 800000000000000000000006 /* XM6ControlWidgets */, 800000000000000000000007 /* Products */, );
+			sourceTree = "<group>";
+		};
+		800000000000000000000002 /* XM6Control */ = {isa = PBXGroup; children = (200000000000000000000001, 200000000000000000000002, 200000000000000000000003, 800000000000000000000003 /* SystemIntegration */, 800000000000000000000004 /* Views */, 800000000000000000000005 /* Resources */, ); path = Sources/XM6Control; sourceTree = SOURCE_ROOT; };
+		800000000000000000000003 /* SystemIntegration */ = {isa = PBXGroup; children = (200000000000000000000004, ); path = SystemIntegration; sourceTree = "<group>"; };
+		800000000000000000000004 /* Views */ = {isa = PBXGroup; children = (200000000000000000000005, 200000000000000000000006, 200000000000000000000007, 200000000000000000000008, 200000000000000000000009, 20000000000000000000000A, 20000000000000000000000B, 20000000000000000000000C, 20000000000000000000000D, 20000000000000000000000E, 20000000000000000000000F, 200000000000000000000010, 200000000000000000000011, 200000000000000000000012, ); path = Views; sourceTree = "<group>"; };
+		800000000000000000000005 /* Resources */ = {isa = PBXGroup; children = (200000000000000000000013, ); path = Resources; sourceTree = "<group>"; };
+		800000000000000000000006 /* XM6ControlWidgets */ = {isa = PBXGroup; children = (200000000000000000000014, ); path = Extensions/XM6ControlWidgets; sourceTree = SOURCE_ROOT; };
+		800000000000000000000007 /* Products */ = {isa = PBXGroup; children = (200000000000000000000015, 200000000000000000000016, ); name = Products; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		500000000000000000000001 /* XM6Control */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 900000000000000000000002;
+			buildPhases = (600000000000000000000002 /* Sources */, 700000000000000000000001 /* Frameworks */, 600000000000000000000003 /* Resources */, 600000000000000000000001 /* Embed App Extensions */, );
+			buildRules = ();
+			dependencies = (300000000000000000000002 /* PBXTargetDependency */, );
+			name = XM6Control;
+			packageProductDependencies = (A00000000000000000000001, A00000000000000000000002, );
+			productName = XM6Control;
+			productReference = 200000000000000000000015;
+			productType = "com.apple.product-type.application";
+		};
+		500000000000000000000002 /* XM6ControlWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 900000000000000000000003;
+			buildPhases = (600000000000000000000004 /* Sources */, 700000000000000000000002 /* Frameworks */, 600000000000000000000005 /* Resources */, );
+			buildRules = ();
+			dependencies = ();
+			name = XM6ControlWidgets;
+			packageProductDependencies = (A00000000000000000000003, );
+			productName = XM6ControlWidgets;
+			productReference = 200000000000000000000016;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		400000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1640; LastUpgradeCheck = 1640; TargetAttributes = {500000000000000000000001 = {CreatedOnToolsVersion = 16.4; }; 500000000000000000000002 = {CreatedOnToolsVersion = 26.0; }; }; };
+			buildConfigurationList = 900000000000000000000001;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base, );
+			mainGroup = 800000000000000000000001;
+			packageReferences = (B00000000000000000000001 /* XCLocalSwiftPackageReference "." */, );
+			productRefGroup = 800000000000000000000007;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (500000000000000000000001, 500000000000000000000002, );
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		600000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (100000000000000000000013, ); runOnlyForDeploymentPostprocessing = 0; };
+		600000000000000000000005 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		600000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (100000000000000000000001, 100000000000000000000002, 100000000000000000000003, 100000000000000000000004, 100000000000000000000005, 100000000000000000000006, 100000000000000000000007, 100000000000000000000008, 100000000000000000000009, 10000000000000000000000A, 10000000000000000000000B, 10000000000000000000000C, 10000000000000000000000D, 10000000000000000000000E, 10000000000000000000000F, 100000000000000000000010, 100000000000000000000011, 100000000000000000000012, ); runOnlyForDeploymentPostprocessing = 0; };
+		600000000000000000000004 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (100000000000000000000014, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		300000000000000000000002 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 500000000000000000000002 /* XM6ControlWidgets */; targetProxy = 300000000000000000000001 /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		C00000000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; MACOSX_DEPLOYMENT_TARGET = 13.0; SDKROOT = macosx; SWIFT_VERSION = 5.0; XM6_CONTROL_CENTER_DEPLOYMENT_TARGET = 26.0; }; name = Debug; };
+		C00000000000000000000002 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; MACOSX_DEPLOYMENT_TARGET = 13.0; SDKROOT = macosx; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_VERSION = 5.0; XM6_CONTROL_CENTER_DEPLOYMENT_TARGET = 26.0; }; name = Release; };
+		C00000000000000000000003 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGNING_ALLOWED = NO; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 1; EXECUTABLE_NAME = XM6Control; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Sources/XM6Control/Resources/Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks"; MACOSX_DEPLOYMENT_TARGET = 13.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.local.xm6control; PRODUCT_NAME = "XM6 Control"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Debug; };
+		C00000000000000000000004 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGNING_ALLOWED = NO; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 1; EXECUTABLE_NAME = XM6Control; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Sources/XM6Control/Resources/Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks"; MACOSX_DEPLOYMENT_TARGET = 13.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.local.xm6control; PRODUCT_NAME = "XM6 Control"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Release; };
+		C00000000000000000000005 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = Extensions/XM6ControlWidgets/XM6ControlWidgets.entitlements; CODE_SIGNING_ALLOWED = NO; CURRENT_PROJECT_VERSION = 1.0; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Extensions/XM6ControlWidgets/Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"; MACOSX_DEPLOYMENT_TARGET = "$(XM6_CONTROL_CENTER_DEPLOYMENT_TARGET)"; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.local.xm6control.widgets; PRODUCT_NAME = XM6ControlWidgets; SKIP_INSTALL = YES; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Debug; };
+		C00000000000000000000006 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = Extensions/XM6ControlWidgets/XM6ControlWidgets.entitlements; CODE_SIGNING_ALLOWED = NO; CURRENT_PROJECT_VERSION = 1.0; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Extensions/XM6ControlWidgets/Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"; MACOSX_DEPLOYMENT_TARGET = "$(XM6_CONTROL_CENTER_DEPLOYMENT_TARGET)"; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.local.xm6control.widgets; PRODUCT_NAME = XM6ControlWidgets; SKIP_INSTALL = YES; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		900000000000000000000001 /* Build configuration list for PBXProject */ = {isa = XCConfigurationList; buildConfigurations = (C00000000000000000000001, C00000000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		900000000000000000000002 /* Build configuration list for PBXNativeTarget "XM6Control" */ = {isa = XCConfigurationList; buildConfigurations = (C00000000000000000000003, C00000000000000000000004, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		900000000000000000000003 /* Build configuration list for PBXNativeTarget "XM6ControlWidgets" */ = {isa = XCConfigurationList; buildConfigurations = (C00000000000000000000005, C00000000000000000000006, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		B00000000000000000000001 /* XCLocalSwiftPackageReference "." */ = {isa = XCLocalSwiftPackageReference; relativePath = .; };
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A00000000000000000000001 /* SonyHeadphonesKit */ = {isa = XCSwiftPackageProductDependency; package = B00000000000000000000001; productName = SonyHeadphonesKit; };
+		A00000000000000000000002 /* XM6SystemIntegration */ = {isa = XCSwiftPackageProductDependency; package = B00000000000000000000001; productName = XM6SystemIntegration; };
+		A00000000000000000000003 /* XM6SystemIntegration */ = {isa = XCSwiftPackageProductDependency; package = B00000000000000000000001; productName = XM6SystemIntegration; };
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 400000000000000000000001 /* Project object */;
+}

@@ -1,6 +1,8 @@
 # Build artifacts
 .build/
 *.xcodeproj
+!XM6Control.xcodeproj/
+!XM6Control.xcodeproj/**
 DerivedData/
 
 # macOS

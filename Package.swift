@@ -6,6 +6,12 @@ let package = Package(
     platforms: [
         .macOS(.v13)
     ],
+    products: [
+        .library(name: "SonyHeadphonesKit", targets: ["SonyHeadphonesKit"]),
+        .library(name: "XM6SystemIntegration", targets: ["XM6SystemIntegration"]),
+        .executable(name: "XM6Control", targets: ["XM6Control"]),
+        .executable(name: "XM6Probe", targets: ["XM6Probe"])
+    ],
     targets: [
         .target(
             name: "SonyHeadphonesKit",
@@ -13,9 +19,10 @@ let package = Package(
                 .linkedFramework("IOBluetooth")
             ]
         ),
+        .target(name: "XM6SystemIntegration"),
         .executableTarget(
             name: "XM6Control",
-            dependencies: ["SonyHeadphonesKit"],
+            dependencies: ["SonyHeadphonesKit", "XM6SystemIntegration"],
             exclude: ["Resources"]
         ),
         // Developer tool: connects to the headphones and sends raw hex payloads,
@@ -34,6 +41,10 @@ let package = Package(
                     "-Xlinker", "Sources/XM6Probe/Info.plist"
                 ])
             ]
+        ),
+        .testTarget(
+            name: "XM6SystemIntegrationTests",
+            dependencies: ["XM6SystemIntegration"]
         )
     ]
 )

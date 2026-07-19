@@ -20,6 +20,7 @@
 | Wearing detection (pause when taken off) | ✅ |
 | Automatic power off | ✅ |
 | Menu bar quick controls | ✅ full control without opening the app |
+| Control Center controls | ✅ on macOS 26+ |
 | Floating desktop widget | ✅ draggable, all-Spaces, remembers position |
 | Runs in background (no Dock icon) | ✅ pure menu-bar app |
 
@@ -27,8 +28,9 @@ The app is **event-driven**: 0% CPU at idle, no polling, negligible battery impa
 
 ## Requirements
 
-- macOS 13+ (Liquid Glass styling on macOS 26+, graceful fallback below)
-- Xcode Command Line Tools (`xcode-select --install`) — full Xcode not required
+- macOS 13+ (menu-bar controls on every supported version)
+- Xcode Command Line Tools (`xcode-select --install`) for the base app
+- macOS 26 and Xcode 26+ to build and use the optional Control Center extension
 - A Sony WH-1000XM6 paired in **System Settings → Bluetooth**
 
 ## Build & Run
@@ -40,9 +42,23 @@ cd xm6-control
 open ".build/XM6 Control.app"
 ```
 
-That's it. The script builds with SwiftPM, packages a double-clickable `.app`, generates the app icon, and signs the bundle. Drag `XM6 Control.app` to `/Applications` if you want it permanent, and add it to **System Settings → General → Login Items** to start it at login.
+That's it. The script detects the active SDK automatically. With Xcode 26 it builds the app and native Control Center extension; with older toolchains it builds the same menu-bar app using SwiftPM. It then packages and signs a double-clickable `.app`. Drag `XM6 Control.app` to `/Applications` if you want it permanent, and add it to **System Settings → General → Login Items** to start it at login.
 
 On first launch macOS asks for Bluetooth permission — click **Allow**. Make sure the headphones are powered on and connected as an audio device before hitting **Try Again** if the first connection races.
+
+### Control Center controls (macOS 26+)
+
+The app provides five controls through Apple's supported WidgetKit extension point:
+
+- Open XM6 Controls
+- Open XM6 Widget
+- Noise Cancelling
+- Ambient Sound
+- Sound Control Off
+
+After building with Xcode 26, launch the app once, open Control Center, choose **Edit Controls**, search for **XM6**, and add the controls you want. macOS can also place these controls directly in the menu bar.
+
+Apple doesn't provide an extension point inside the built-in Sound device list, so the XM6 controls appear as their own Control Center items rather than as a submenu below `WH-1000XM6`. See [Creating controls to perform actions across the system](https://developer.apple.com/documentation/widgetkit/creating-controls-to-perform-actions-across-the-system) for the platform model.
 
 ### Avoiding permission re-prompts across rebuilds
 
@@ -76,9 +92,14 @@ Sources/
 │   ├── RFCOMMConnection.swift  #   IOBluetooth RFCOMM channel management
 │   ├── HeadphonesController.swift # Session orchestration, ACK/sequence, state
 │   └── ProtocolLog.swift       #   Optional hex-dump debug log
+├── XM6SystemIntegration/       # App Intents + durable system-action mailbox
 └── XM6Control/                 # SwiftUI app
     ├── XM6ControlApp.swift     #   Main window + menu bar extra + desktop widget
+    ├── SystemIntegration/      #   Routes system actions to the live controller
     └── Views/                  #   Dashboard cards, compact controls, widget
+
+Extensions/
+└── XM6ControlWidgets/          # macOS 26 Control Center extension
 ```
 
 ### Protocol notes
@@ -96,6 +117,7 @@ Enable **Debug logging** at the bottom of the main window to capture a hex trans
 | Bluetooth permission prompt after rebuild | Expected with ad-hoc signing — see the `XM6Dev` certificate setup above |
 | A card shows "state not reported" | That query wasn't answered; controls still work. Enable debug logging and open an issue with the log |
 | Menu bar icon missing | The app may not be running — launch it again; it lives only in the menu bar (no Dock icon) |
+| XM6 missing from Control Center | Build with Xcode 26+, launch the new app once, then use Control Center → Edit Controls |
 
 ## Acknowledgements
 

@@ -50,8 +50,9 @@ struct CompactControlsView: View {
                 NSApp.activate(ignoringOtherApps: true)
             }
             .controlSize(.small)
-            Button("Widget") {
+            Button("Open Widget") {
                 openWindow(id: "desktop-widget")
+                NSApp.activate(ignoringOtherApps: true)
             }
             .controlSize(.small)
             Spacer()
