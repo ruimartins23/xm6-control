@@ -1,6 +1,7 @@
 #!/bin/bash
 # Builds XM6Control and packages it into a double-clickable .app bundle.
-# No Xcode required -- this only needs the Swift toolchain (Command Line Tools).
+# Xcode 26+ adds the Control Center extension; older toolchains build the same
+# menu-bar app without that extension using SwiftPM.
 #
 # Code signing: if a signing identity named "XM6Dev" exists in the keychain
 # (self-signed code-signing certificate created via Keychain Access), the app is
@@ -12,10 +13,19 @@ cd "$(dirname "$0")/.."
 
 CONFIG="${1:-release}"
 APP_NAME="XM6 Control"
-BUNDLE_ID="com.local.xm6control"
 BUILD_DIR=".build/${CONFIG}"
 APP_DIR=".build/${APP_NAME}.app"
 SIGN_IDENTITY="XM6Dev"
+XCODE_DERIVED_DATA=".build/xcode"
+
+case "${CONFIG}" in
+    debug) XCODE_CONFIGURATION="Debug" ;;
+    release) XCODE_CONFIGURATION="Release" ;;
+    *)
+        echo "error: configuration must be 'debug' or 'release'" >&2
+        exit 2
+        ;;
+esac
 
 build_with_cache_recovery() (
     local build_log
@@ -41,8 +51,62 @@ build_with_cache_recovery() (
     return 1
 )
 
-echo "==> Building (${CONFIG})..."
-build_with_cache_recovery
+supports_control_center_build() {
+    local sdk_version sdk_major
+    sdk_version="$(xcrun --sdk macosx --show-sdk-version 2>/dev/null || true)"
+    sdk_major="${sdk_version%%.*}"
+    [[ "${sdk_major}" =~ ^[0-9]+$ ]] && [ "${sdk_major}" -ge 26 ]
+}
+
+assemble_legacy_app() {
+    echo "==> Building menu-bar app with SwiftPM (${CONFIG})..."
+    build_with_cache_recovery
+
+    echo "==> Assembling ${APP_NAME}.app..."
+    rm -rf "${APP_DIR}"
+    mkdir -p "${APP_DIR}/Contents/MacOS"
+    mkdir -p "${APP_DIR}/Contents/Resources"
+
+    cp "${BUILD_DIR}/XM6Control" "${APP_DIR}/Contents/MacOS/XM6Control"
+    cp "Sources/XM6Control/Resources/Info.plist" "${APP_DIR}/Contents/Info.plist"
+    cp "Sources/XM6Control/Resources/AppIcon.icns" "${APP_DIR}/Contents/Resources/AppIcon.icns"
+}
+
+assemble_control_center_app() {
+    echo "==> Building app and Control Center extension with Xcode (${XCODE_CONFIGURATION})..."
+    xcodebuild \
+        -project XM6Control.xcodeproj \
+        -scheme XM6ControlApp \
+        -configuration "${XCODE_CONFIGURATION}" \
+        -destination "platform=macOS,arch=$(uname -m)" \
+        -derivedDataPath "${XCODE_DERIVED_DATA}" \
+        CODE_SIGNING_ALLOWED=NO \
+        build
+
+    local built_app
+    built_app="${XCODE_DERIVED_DATA}/Build/Products/${XCODE_CONFIGURATION}/${APP_NAME}.app"
+    if [ ! -d "${built_app}/Contents/PlugIns/XM6ControlWidgets.appex" ]; then
+        echo "error: Xcode build did not embed XM6ControlWidgets.appex" >&2
+        return 1
+    fi
+
+    rm -rf "${APP_DIR}"
+    ditto "${built_app}" "${APP_DIR}"
+}
+
+sign_app() {
+    local identity="$1"
+    local control_extension="${APP_DIR}/Contents/PlugIns/XM6ControlWidgets.appex"
+
+    if [ -d "${control_extension}" ]; then
+        codesign \
+            --force \
+            --sign "${identity}" \
+            --entitlements "Extensions/XM6ControlWidgets/XM6ControlWidgets.entitlements" \
+            "${control_extension}"
+    fi
+    codesign --force --sign "${identity}" "${APP_DIR}"
+}
 
 # The app icon is generated artwork, not checked into the repo. Create it on demand.
 if [ ! -f "Sources/XM6Control/Resources/AppIcon.icns" ]; then
@@ -50,14 +114,12 @@ if [ ! -f "Sources/XM6Control/Resources/AppIcon.icns" ]; then
     swift Scripts/make_icon.swift
 fi
 
-echo "==> Assembling ${APP_NAME}.app..."
-rm -rf "${APP_DIR}"
-mkdir -p "${APP_DIR}/Contents/MacOS"
-mkdir -p "${APP_DIR}/Contents/Resources"
-
-cp "${BUILD_DIR}/XM6Control" "${APP_DIR}/Contents/MacOS/XM6Control"
-cp "Sources/XM6Control/Resources/Info.plist" "${APP_DIR}/Contents/Info.plist"
-cp "Sources/XM6Control/Resources/AppIcon.icns" "${APP_DIR}/Contents/Resources/AppIcon.icns"
+if supports_control_center_build; then
+    assemble_control_center_app
+else
+    assemble_legacy_app
+    echo "==> Control Center tiles require the macOS 26 SDK; menu-bar controls are included."
+fi
 
 # Optional hero photo: drop your own headphones.png into Resources and it appears in-app.
 if [ -f "Sources/XM6Control/Resources/headphones.png" ]; then
@@ -68,10 +130,10 @@ fi
 # yet still sign successfully.
 if security find-identity -p codesigning 2>/dev/null | grep -q "\"${SIGN_IDENTITY}\""; then
     echo "==> Signing with ${SIGN_IDENTITY} (stable identity, no permission re-prompts)..."
-    codesign --force --deep --sign "${SIGN_IDENTITY}" "${APP_DIR}"
+    sign_app "${SIGN_IDENTITY}"
 else
     echo "==> Ad-hoc code signing (create an '${SIGN_IDENTITY}' certificate to avoid permission re-prompts)..."
-    codesign --force --deep --sign - "${APP_DIR}"
+    sign_app -
 fi
 
 echo "==> Done: ${APP_DIR}"
