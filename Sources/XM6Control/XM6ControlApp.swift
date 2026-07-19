@@ -28,6 +28,8 @@ struct XM6ControlApp: App {
                 .environmentObject(controller)
         } label: {
             Image(systemName: "headphones.circle.fill")
+                .environmentObject(controller)
+                .background(XM6SystemActionBridge().environmentObject(controller))
         }
         .menuBarExtraStyle(.window)
 
