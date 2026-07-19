@@ -17,8 +17,32 @@ BUILD_DIR=".build/${CONFIG}"
 APP_DIR=".build/${APP_NAME}.app"
 SIGN_IDENTITY="XM6Dev"
 
+build_with_cache_recovery() (
+    local build_log
+    build_log="$(mktemp -t xm6-control-build.XXXXXX)"
+    trap 'rm -f "${build_log}"' EXIT
+
+    if swift build -c "${CONFIG}" 2>&1 | tee "${build_log}"; then
+        return 0
+    fi
+
+    # Swift's precompiled headers contain absolute ModuleCache paths. If the
+    # checkout is moved, an otherwise valid incremental build fails until the
+    # path-bound artifacts are removed.
+    if grep -Eq \
+        "PCH was compiled with module cache path|PCH file .* was built from a different branch" \
+        "${build_log}"; then
+        echo "==> Stale Swift module cache detected; cleaning and retrying..."
+        swift package clean
+        swift build -c "${CONFIG}"
+        return
+    fi
+
+    return 1
+)
+
 echo "==> Building (${CONFIG})..."
-swift build -c "${CONFIG}"
+build_with_cache_recovery
 
 # The app icon is generated artwork, not checked into the repo. Create it on demand.
 if [ ! -f "Sources/XM6Control/Resources/AppIcon.icns" ]; then
