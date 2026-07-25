@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 import PackageDescription
 
 let package = Package(
@@ -9,6 +9,7 @@ let package = Package(
     targets: [
         .target(
             name: "SonyHeadphonesKit",
+            swiftSettings: [.swiftLanguageMode(.v5)],
             linkerSettings: [
                 .linkedFramework("IOBluetooth")
             ]
@@ -16,7 +17,8 @@ let package = Package(
         .executableTarget(
             name: "XM6Control",
             dependencies: ["SonyHeadphonesKit"],
-            exclude: ["Resources"]
+            exclude: ["Resources"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         // Developer tool: connects to the headphones and sends raw hex payloads,
         // printing every reply. Used to verify command layouts on real hardware.
@@ -24,6 +26,7 @@ let package = Package(
             name: "XM6Probe",
             dependencies: ["SonyHeadphonesKit"],
             exclude: ["Info.plist"],
+            swiftSettings: [.swiftLanguageMode(.v5)],
             linkerSettings: [
                 // Embed Info.plist into the binary so the Bluetooth privacy check
                 // (NSBluetoothAlwaysUsageDescription) passes for a bare CLI tool.
