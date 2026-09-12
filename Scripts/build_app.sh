@@ -20,9 +20,19 @@ SIGN_IDENTITY="XM6Dev"
 echo "==> Building (${CONFIG})..."
 swift build -c "${CONFIG}"
 
-# The app icon is generated artwork, not checked into the repo. Create it on demand.
-if [ ! -f "Sources/XM6Control/Resources/AppIcon.icns" ]; then
-    echo "==> Generating app icon..."
+# App icon. The hero photo is the canonical artwork when it is present, so the Dock
+# icon matches the headphones the app controls; the generated vector artwork is the
+# fallback for a checkout without a photo.
+ICON_SRC="Sources/XM6Control/Resources/headphones.png"
+ICON_OUT="Sources/XM6Control/Resources/AppIcon.icns"
+if [ -f "${ICON_SRC}" ]; then
+    if [ ! -f "${ICON_OUT}" ] || [ "${ICON_SRC}" -nt "${ICON_OUT}" ] || [ "Scripts/make_icon_from_photo.swift" -nt "${ICON_OUT}" ]; then
+        echo "==> Generating app icon from headphones.png..."
+        swift Scripts/make_icon_from_photo.swift
+        iconutil -c icns ".build/AppIcon.iconset" -o "${ICON_OUT}"
+    fi
+elif [ ! -f "${ICON_OUT}" ]; then
+    echo "==> Generating app icon (vector artwork)..."
     swift Scripts/make_icon.swift
 fi
 

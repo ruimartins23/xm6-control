@@ -81,6 +81,12 @@ extension NSImage {
     /// the status item gives the label no foreground style to fill with. A template
     /// NSImage is what AppKit expects there, and it gets the system's light/dark and
     /// click-highlight inversion handled for free.
+    ///
+    /// The product photo is deliberately *not* used here, even though it is the app
+    /// icon. A template image keeps only alpha, and the photo is a three-quarter view
+    /// whose two earcups merge into one mass once the shading is gone: at 16pt it
+    /// reads as a featureless blob rather than headphones. The drawn glyph keeps the
+    /// gap under the headband, which is what makes the shape legible that small.
     static func xm6MenuBarIcon(size: CGFloat = 16) -> NSImage {
         let box = CGRect(x: 0, y: 0, width: size, height: size)
         // `flipped: true` matches the top-left origin the Shape is drawn against,

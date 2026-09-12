@@ -6,9 +6,6 @@ DerivedData/
 # macOS
 .DS_Store
 
-# Local-only assets (not distributed):
-# - AppIcon.icns may be a personal icon; the build script generates the default
-#   artwork automatically when this file is absent (Scripts/make_icon.swift).
-# - headphones.png is an optional personal hero photo shown in the app header.
+# Generated at build time from headphones.png (or from vector artwork when no photo
+# is present), so it does not need to be checked in.
 Sources/XM6Control/Resources/AppIcon.icns
-Sources/XM6Control/Resources/headphones.png

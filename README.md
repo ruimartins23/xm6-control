@@ -63,12 +63,13 @@ Ad-hoc-signed apps get a new identity every build, so macOS re-asks for Bluetoot
 2. Name: `XM6Dev` · Identity Type: *Self-Signed Root* · Certificate Type: **Code Signing**
 3. Rebuild. The script detects `XM6Dev` automatically and uses it from then on.
 
-### Custom hero image
+### Artwork
 
-The dashboard header shows original vector artwork by default. To display a photo of your own headphones instead, save it as `headphones.png` (real PNG, not WebP) in either:
+`Sources/XM6Control/Resources/headphones.png` drives two things: the image at the top of the dashboard, and the app icon. The build script trims it to its opaque bounds and generates `AppIcon.icns` from it, so the Dock icon is the headphones themselves. A checkout without that file falls back to original vector artwork for both.
 
-- `Sources/XM6Control/Resources/`, bundled at next build, or
-- `~/Library/Application Support/XM6 Control/`, picked up at next launch, no rebuild.
+To use a photo of your own headphones instead, replace that file (a real PNG with a transparent background, not a WebP), or drop one at `~/Library/Application Support/XM6 Control/headphones.png` to change the in-app image without a rebuild.
+
+The menu bar icon is drawn rather than taken from the photo. A menu bar image has to be a template, which keeps only its alpha, and the photo's three-quarter view collapses into a featureless blob at that size.
 
 ## Architecture
 
