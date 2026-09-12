@@ -24,8 +24,13 @@
 	<string>public.app-category.utilities</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
+	<!-- Deliberately a normal app: launching it shows a real window and a Dock icon.
+	     Menu-bar-only mode is a user preference applied at runtime via
+	     NSApplication.setActivationPolicy(.accessory), so it can be turned on and off
+	     without reinstalling. Baking LSUIElement=true in here made the window
+	     impossible to show on launch. -->
 	<key>LSUIElement</key>
-	<true/>
+	<false/>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSPrincipalClass</key>

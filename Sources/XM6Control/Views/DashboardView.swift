@@ -3,64 +3,78 @@ import SonyHeadphonesKit
 
 struct DashboardView: View {
     @EnvironmentObject private var controller: HeadphonesController
+    @EnvironmentObject private var settings: AppSettings
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            // Ranked top to bottom: the control most likely to be the reason the
+            // window was opened first, set-once preferences last.
+            VStack(spacing: 12) {
                 HeaderView()
                 NoiseControlCard()
-                ListeningModeCard()
-                EqualizerCard()
-                SpeakToChatCard()
-                WearDetectionCard()
+                SoundCard()
                 ConnectionCard()
+                BehaviorCard()
+                footer
+            }
+            .padding(16)
+        }
+    }
 
-                HStack(spacing: 10) {
-                    Button {
-                        openWindow(id: "desktop-widget")
-                    } label: {
-                        Label("Widget", systemImage: "macwindow.on.rectangle")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button {
-                        controller.refreshState()
-                    } label: {
-                        Label("Refresh", systemImage: "arrow.clockwise")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button(role: .destructive) {
-                        controller.disconnect()
-                    } label: {
-                        Text("Disconnect")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
+    private var footer: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Button {
+                    openWindow(id: "desktop-widget")
+                } label: {
+                    Label("Widget", systemImage: "macwindow.on.rectangle")
+                        .frame(maxWidth: .infinity)
                 }
-                .padding(.top, 4)
+                .help("Open the floating desktop widget")
+
+                Button {
+                    controller.refreshState()
+                } label: {
+                    Label("Refresh", systemImage: "arrow.clockwise")
+                        .frame(maxWidth: .infinity)
+                }
+                .help("Re-read every setting from the headphones")
+
+                Button(role: .destructive) {
+                    controller.disconnect()
+                } label: {
+                    Text("Disconnect")
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Toggle("Show only in the menu bar", isOn: $settings.menuBarOnly)
+                    .toggleStyle(.checkbox)
+                    .help("Hides the Dock icon. The menu bar panel stays available, and you can reopen this window from there.")
+
+                Toggle("Debug log", isOn: $controller.protocolLoggingEnabled)
+                    .toggleStyle(.checkbox)
+                    .help("Write a hex transcript of every frame to protocol.log")
 
                 Text(footerText)
-                    .font(.caption2)
                     .foregroundStyle(.tertiary)
-
-                Toggle("Debug logging (protocol.log)", isOn: $controller.protocolLoggingEnabled)
-                    .toggleStyle(.checkbox)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
             }
-            .padding(20)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .padding(.top, 2)
     }
 
     private var footerText: String {
         switch controller.protocolVersion {
-        case .v2: return "Connected \u{2022} Sony protocol v2"
-        case .v1: return "Connected \u{2022} Sony protocol v1 (some features may be limited)"
-        case .unknown: return "Connected \u{2022} protocol version not identified"
+        case .v2: return "Sony protocol v2"
+        case .v1: return "Sony protocol v1 (some features may be limited)"
+        case .unknown: return "Protocol version not identified"
         }
     }
 }
