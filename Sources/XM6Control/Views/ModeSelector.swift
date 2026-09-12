@@ -63,17 +63,45 @@ private struct ModeSelectorButton<Value: Hashable>: View {
         } label: {
             VStack(spacing: 7) {
                 ZStack {
+                    // Selected reads as a raised physical button, unselected as a well
+                    // pressed into the card. That difference is the depth cue; there is
+                    // still no coloured halo, which is decoration rather than state.
                     Circle()
-                        .fill(isSelected ? AnyShapeStyle(Color.brand) : AnyShapeStyle(Color.primary.opacity(0.06)))
+                        .fill(
+                            isSelected
+                                ? AnyShapeStyle(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.brand.opacity(1.0),
+                                            Color.brand.opacity(0.82),
+                                        ],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                : AnyShapeStyle(Color.black.opacity(0.16))
+                        )
                         .overlay(
                             Circle().strokeBorder(
-                                isSelected ? Color.clear : Color.primary.opacity(0.10),
+                                LinearGradient(
+                                    colors: isSelected
+                                        // Lit along the top edge, like a key-lit control.
+                                        ? [Color.white.opacity(0.45), Color.white.opacity(0.05)]
+                                        // Darker at the top, which is what makes a
+                                        // recess read as sunken rather than raised.
+                                        : [Color.black.opacity(0.32), Color.white.opacity(0.10)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
                                 lineWidth: 1
                             )
                         )
-                    // No colored glow behind the selected circle: on a Mac that reads
-                    // as decoration rather than as state. Selection is the accent
-                    // fill plus the heavier caption below.
+                        .shadow(
+                            color: Color.black.opacity(isSelected ? 0.35 : 0),
+                            radius: 4,
+                            y: 2
+                        )
+
                     Image(systemName: option.icon)
                         .font(.system(size: 19, weight: isSelected ? .semibold : .regular))
                         .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.75))

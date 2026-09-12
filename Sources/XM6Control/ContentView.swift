@@ -7,11 +7,20 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // Plain window background. This used to carry two large blurred color
-            // circles; they read as generic app decoration rather than as part of a
-            // Mac app, and they fought the translucency of the cards on top.
-            Color(nsColor: .windowBackgroundColor)
-                .ignoresSafeArea()
+            // A shallow vertical gradient rather than a flat fill: it gives the cards
+            // something to sit against, so they read as layers instead of rectangles
+            // on the same plane. Deliberately only a few percent, and nothing like
+            // the large blurred colour circles this replaced, which read as generic
+            // app decoration rather than as part of a Mac app.
+            LinearGradient(
+                colors: [
+                    Color(nsColor: .windowBackgroundColor),
+                    Color(nsColor: .underPageBackgroundColor),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
 
             switch controller.connectionState {
             case .disconnected, .failed, .searching:

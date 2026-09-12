@@ -10,6 +10,10 @@ struct HeaderView: View {
             // below the fold in the default window size.
             HeadphoneImage()
                 .frame(height: 112)
+                // Contact shadow. The photo has a transparent background, so this
+                // follows the headphones' own outline and grounds them on the panel
+                // instead of leaving them floating flat against it.
+                .shadow(color: Color.black.opacity(0.45), radius: 10, y: 7)
 
             VStack(spacing: 6) {
                 Text(controller.deviceName ?? "WH-1000XM6")
@@ -33,8 +37,18 @@ struct HeaderView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             // Capsule is the documented exception to the radius scale for status
-            // badges (see `Radius`).
-            .background(Color.primary.opacity(0.06), in: Capsule())
+            // badges (see `Radius`). Recessed, matching the unselected controls.
+            .background(Color.black.opacity(0.18), in: Capsule())
+            .overlay(
+                Capsule().strokeBorder(
+                    LinearGradient(
+                        colors: [Color.black.opacity(0.30), Color.white.opacity(0.09)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 1
+                )
+            )
             .accessibilityLabel(
                 "Battery \(battery.level) percent\(battery.isCharging ? ", charging" : "")"
             )

@@ -26,6 +26,33 @@ struct GlassSurface: ViewModifier {
     var cornerRadius: CGFloat = Radius.card
 
     func body(content: Content) -> some View {
+        base(content: content)
+            // Specular edge: a hairline that is bright along the top and fades down the
+            // sides, which is how every macOS material catches light. Without it the
+            // card is a flat rectangle of slightly different grey.
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.22),
+                                Color.white.opacity(0.06),
+                                Color.black.opacity(0.10),
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            // Elevation. Two shadows rather than one: a tight contact shadow that
+            // separates the card from the panel, and a wider soft one for depth.
+            .shadow(color: Color.black.opacity(0.22), radius: 2, y: 1)
+            .shadow(color: Color.black.opacity(0.16), radius: 14, y: 6)
+    }
+
+    @ViewBuilder
+    private func base(content: Content) -> some View {
         // `#available` is a runtime check, so it still requires `glassEffect` to exist at
         // compile time -- which it doesn't on SDKs older than macOS 26. The compiler guard
         // keeps the project buildable on earlier Xcode versions.
@@ -44,13 +71,6 @@ struct GlassSurface: ViewModifier {
     private func fallbackSurface(content: Content) -> some View {
         content
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
-            )
-            // Shadow tinted toward the window background rather than pure black,
-            // so the card doesn't look pasted onto the panel.
-            .shadow(color: Color.black.opacity(0.08), radius: 10, y: 3)
     }
 }
 
