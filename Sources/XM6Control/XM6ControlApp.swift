@@ -42,7 +42,7 @@ struct XM6ControlApp: App {
                 .environmentObject(controller)
                 .environmentObject(settings)
         } label: {
-            Image(systemName: "headphones.circle.fill")
+            MenuBarIcon()
         }
         .menuBarExtraStyle(.window)
 
