@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import SonyHeadphonesKit
 
 struct ContentView: View {
@@ -6,7 +7,11 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            backgroundGradient
+            // Plain window background. This used to carry two large blurred color
+            // circles; they read as generic app decoration rather than as part of a
+            // Mac app, and they fought the translucency of the cards on top.
+            Color(nsColor: .windowBackgroundColor)
+                .ignoresSafeArea()
 
             switch controller.connectionState {
             case .disconnected, .failed, .searching:
@@ -17,7 +22,8 @@ struct ContentView: View {
                 DashboardView()
             }
         }
-        .tint(.indigo)
+        // No explicit tint: selection follows the user's System Settings accent,
+        // which is what every other Mac app does.
         .onAppear {
             // Only connect on a genuinely fresh start. This view re-appears every time
             // the main window is reopened from the menu bar; reconnecting over a live
@@ -27,25 +33,5 @@ struct ContentView: View {
                 controller.autoConnect()
             }
         }
-    }
-
-    private var backgroundGradient: some View {
-        ZStack {
-            Color(nsColor: .windowBackgroundColor)
-
-            // Soft out-of-focus color washes behind the glass surfaces.
-            Circle()
-                .fill(Color.indigo.opacity(0.18))
-                .frame(width: 420, height: 420)
-                .blur(radius: 110)
-                .offset(x: -140, y: -220)
-
-            Circle()
-                .fill(Color.purple.opacity(0.10))
-                .frame(width: 380, height: 380)
-                .blur(radius: 120)
-                .offset(x: 170, y: 240)
-        }
-        .ignoresSafeArea()
     }
 }

@@ -1,7 +1,9 @@
 import SwiftUI
 import SonyHeadphonesKit
 
-struct ListeningModeCard: View {
+/// Listening mode picker. A section rather than its own card: it shapes the sound,
+/// so it shares a surface with the equalizer inside `SoundCard`.
+struct ListeningModeSection: View {
     @EnvironmentObject private var controller: HeadphonesController
 
     private var effectiveMode: ListeningMode? {
@@ -9,19 +11,22 @@ struct ListeningModeCard: View {
     }
 
     var body: some View {
-        Card("Listening Mode") {
+        CardSection("Listening Mode") {
             if let mode = effectiveMode {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 12) {
                     if controller.listeningMode == nil {
                         StateNotReportedBanner()
                     }
 
-                    HStack(spacing: 24) {
-                        modeButton(.standard, label: "Standard", icon: "music.note", current: mode)
-                        modeButton(.backgroundMusic, label: "Background\nMusic", icon: "sofa", current: mode)
-                        modeButton(.cinema, label: "Cinema", icon: "film", current: mode)
-                    }
-                    .frame(maxWidth: .infinity)
+                    ModeSelector(
+                        options: [
+                            .init(value: .standard, title: "Standard", icon: "music.note"),
+                            .init(value: .backgroundMusic, title: "Background\nMusic", icon: "sofa"),
+                            .init(value: .cinema, title: "Cinema", icon: "film"),
+                        ],
+                        selection: mode,
+                        select: { controller.setListeningMode($0) }
+                    )
 
                     if mode == .backgroundMusic {
                         Picker("Speaker Distance", selection: Binding(
@@ -33,52 +38,14 @@ struct ListeningModeCard: View {
                             }
                         }
                         .pickerStyle(.segmented)
+                        .controlSize(.small)
                         .transition(.opacity)
                     }
                 }
-                .animation(.easeInOut(duration: 0.2), value: mode)
+                .animation(.easeInOut(duration: 0.18), value: mode)
             } else {
                 LoadingRow()
             }
         }
-    }
-
-    private func modeButton(_ mode: ListeningMode, label: String, icon: String, current: ListeningMode) -> some View {
-        let isSelected = current == mode
-        return Button {
-            controller.setListeningMode(mode)
-        } label: {
-            VStack(spacing: 8) {
-                ZStack {
-                    if isSelected {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.brand, .brand.opacity(0.72)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .shadow(color: Color.brand.opacity(0.45), radius: 8, y: 3)
-                    } else {
-                        Circle()
-                            .fill(Color.primary.opacity(0.06))
-                            .overlay(Circle().strokeBorder(Color.primary.opacity(0.10), lineWidth: 1))
-                    }
-                    Image(systemName: icon)
-                        .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
-                        .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.75))
-                }
-                .frame(width: 58, height: 58)
-
-                Text(label)
-                    .font(.caption2.weight(isSelected ? .semibold : .regular))
-                    .foregroundStyle(isSelected ? Color.brand : Color.secondary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .buttonStyle(.plain)
     }
 }

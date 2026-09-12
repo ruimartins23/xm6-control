@@ -41,7 +41,9 @@ struct DisconnectedView: View {
 
             if !controller.pairedDevices.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("OR CHOOSE A PAIRED DEVICE")
+                    // Sentence case, not the all-caps wide-tracking label pattern:
+                    // macOS uses sentence case for section headings.
+                    Text("Or choose a paired device")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 24)
@@ -69,7 +71,7 @@ struct DisconnectedView: View {
                             }
                         }
                     }
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Radius.card))
                     .padding(.horizontal, 24)
                 }
             }

@@ -1,7 +1,8 @@
 import SwiftUI
 import SonyHeadphonesKit
 
-struct WearDetectionCard: View {
+/// Wearing-detection and power settings. A section inside `BehaviorCard`.
+struct WearDetectionSection: View {
     @EnvironmentObject private var controller: HeadphonesController
 
     private var effectivePause: Bool? {
@@ -13,8 +14,8 @@ struct WearDetectionCard: View {
     }
 
     var body: some View {
-        Card("Wearing Detection") {
-            VStack(alignment: .leading, spacing: 14) {
+        CardSection("Wearing Detection") {
+            VStack(alignment: .leading, spacing: 10) {
                 if controller.initialStateTimedOut
                     && (controller.pauseWhenTakenOff == nil || controller.automaticPowerOff == nil) {
                     StateNotReportedBanner()
@@ -26,15 +27,10 @@ struct WearDetectionCard: View {
                         set: { controller.setPauseWhenTakenOff($0) }
                     ))
                     .toggleStyle(.switch)
+                    .controlSize(.small)
                 } else {
-                    HStack {
-                        Text("Pause playback when taken off")
-                        Spacer()
-                        ProgressView().controlSize(.small)
-                    }
+                    pendingRow("Pause playback when taken off")
                 }
-
-                Divider()
 
                 if let autoPowerOff = effectiveAutoPowerOff {
                     Picker("Automatic Power Off", selection: Binding(
@@ -45,14 +41,20 @@ struct WearDetectionCard: View {
                             Text(option.label).tag(option)
                         }
                     }
+                    .controlSize(.small)
                 } else {
-                    HStack {
-                        Text("Automatic Power Off")
-                        Spacer()
-                        ProgressView().controlSize(.small)
-                    }
+                    pendingRow("Automatic Power Off")
                 }
             }
         }
+    }
+
+    private func pendingRow(_ label: String) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            ProgressView().controlSize(.small)
+        }
+        .foregroundStyle(.secondary)
     }
 }

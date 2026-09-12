@@ -40,7 +40,6 @@ struct HeadphoneIllustration: View {
     var body: some View {
         GeometryReader { geo in
             let s = min(geo.size.width, geo.size.height)
-            let cx = geo.size.width / 2
 
             ZStack {
                 // Headband (outer)

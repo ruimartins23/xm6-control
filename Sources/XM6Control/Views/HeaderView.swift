@@ -5,37 +5,48 @@ struct HeaderView: View {
     @EnvironmentObject private var controller: HeadphonesController
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
+            // Trimmed from 150pt: the hero image was pushing the primary control
+            // below the fold in the default window size.
             HeadphoneImage()
-                .frame(height: 150)
-                .padding(.top, 4)
+                .frame(height: 112)
 
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text(controller.deviceName ?? "WH-1000XM6")
-                    .font(.title3.weight(.semibold))
+                    .font(.headline)
 
-                if let battery = controller.battery {
-                    HStack(spacing: 5) {
-                        Image(systemName: batteryIcon(for: battery))
-                        Text("\(battery.level)%\(battery.isCharging ? " \u{2022} Charging" : "")")
-                            .font(.footnote.weight(.medium).monospacedDigit())
-                    }
-                    .foregroundStyle(batteryColor(for: battery))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
-                    .glassSurface(cornerRadius: 999)
-                } else if controller.initialStateTimedOut {
-                    Text("Battery level not reported")
-                        .font(.footnote)
-                        .foregroundStyle(.tertiary)
-                } else {
-                    Text("Loading battery\u{2026}")
-                        .font(.footnote)
-                        .foregroundStyle(.tertiary)
-                }
+                batteryStatus
             }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private var batteryStatus: some View {
+        if let battery = controller.battery {
+            HStack(spacing: 5) {
+                Image(systemName: batteryIcon(for: battery))
+                Text("\(battery.level)%\(battery.isCharging ? " \u{2022} Charging" : "")")
+                    .font(.footnote.weight(.medium).monospacedDigit())
+            }
+            .foregroundStyle(batteryColor(for: battery))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            // Capsule is the documented exception to the radius scale for status
+            // badges (see `Radius`).
+            .background(Color.primary.opacity(0.06), in: Capsule())
+            .accessibilityLabel(
+                "Battery \(battery.level) percent\(battery.isCharging ? ", charging" : "")"
+            )
+        } else if controller.initialStateTimedOut {
+            Text("Battery level not reported")
+                .font(.footnote)
+                .foregroundStyle(.tertiary)
+        } else {
+            Text("Loading battery\u{2026}")
+                .font(.footnote)
+                .foregroundStyle(.tertiary)
+        }
     }
 
     private func batteryColor(for battery: BatteryStatus) -> Color {
@@ -43,7 +54,9 @@ struct HeaderView: View {
         switch battery.level {
         case ..<20: return .red
         case ..<40: return .orange
-        default: return .green
+        // Above 40% the level isn't noteworthy, so it stays in the neutral text
+        // color instead of spending the one accent on a non-actionable status.
+        default: return .secondary
         }
     }
 
