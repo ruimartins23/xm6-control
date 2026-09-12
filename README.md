@@ -17,6 +17,7 @@
 | Noise Cancelling / Ambient Sound / Off | ✅ with ambient level slider (0–20) and Focus on Voice |
 | Listening Mode (Standard / Background Music / Cinema) | ✅ including BGM room size (My Room / Living Room / Cafe) |
 | Equalizer presets (Off, Heavy, Clear, Hard, Soft, Custom) | ✅ XM6-native preset codes |
+| Custom equalizer | ✅ ten band faders, written live as you drag |
 | Battery level + charging status | ✅ live updates |
 | Multipoint device list with names | ✅ shows all connected devices |
 | Playback source switching ("Play here") | ✅ one click |

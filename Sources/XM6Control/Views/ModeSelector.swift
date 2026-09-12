@@ -29,13 +29,17 @@ struct ModeSelector<Value: Hashable>: View {
     let select: (Value) -> Void
 
     var body: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 0) {
             ForEach(options) { option in
                 ModeSelectorButton(
                     option: option,
                     isSelected: option.value == selection,
                     select: select
                 )
+                // Equal shares of the card width rather than a cluster in the middle:
+                // the window is resizable, and a centred huddle leaves the card looking
+                // half-empty as soon as it's widened.
+                .frame(maxWidth: .infinity)
             }
         }
         .frame(maxWidth: .infinity)
