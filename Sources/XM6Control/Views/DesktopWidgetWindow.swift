@@ -34,8 +34,21 @@ struct DesktopWidgetView: View {
 private struct WidgetWindowConfigurator: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
+        configure(view, attemptsRemaining: 10)
+        return view
+    }
+
+    /// The hosting window doesn't exist yet when `makeNSView` runs, and a single
+    /// deferred attempt silently did nothing if it still wasn't attached, leaving a
+    /// widget with full window chrome. Retry briefly instead of giving up once.
+    private func configure(_ view: NSView, attemptsRemaining: Int) {
         DispatchQueue.main.async {
-            guard let window = view.window else { return }
+            guard let window = view.window else {
+                if attemptsRemaining > 0 {
+                    configure(view, attemptsRemaining: attemptsRemaining - 1)
+                }
+                return
+            }
             window.styleMask = [.borderless, .fullSizeContentView]
             window.isOpaque = false
             window.backgroundColor = .clear
@@ -45,7 +58,6 @@ private struct WidgetWindowConfigurator: NSViewRepresentable {
             window.isMovableByWindowBackground = true
             window.setFrameAutosaveName("XM6DesktopWidget")
         }
-        return view
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {}

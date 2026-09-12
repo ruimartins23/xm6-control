@@ -5,6 +5,7 @@ import SonyHeadphonesKit
 /// widget: every frequently-used control in a small footprint.
 struct CompactControlsView: View {
     @EnvironmentObject private var controller: HeadphonesController
+    @EnvironmentObject private var settings: AppSettings
     @Environment(\.openWindow) private var openWindow
     /// Extra chrome (drag hint + close) shown only in the desktop-widget window.
     var isDesktopWidget = false
@@ -44,21 +45,29 @@ struct CompactControlsView: View {
     /// With the Dock icon hidden, this row is the only way to reopen the main
     /// window or quit -- do not remove it from the menu bar panel.
     private var appRow: some View {
-        HStack {
-            Button("Open App") {
-                openWindow(id: "main")
-                NSApp.activate(ignoringOtherApps: true)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Button("Open App") {
+                    openWindow(id: "main")
+                    NSApp.activate(ignoringOtherApps: true)
+                }
+                Button("Widget") {
+                    openWindow(id: "desktop-widget")
+                }
+                Spacer()
+                Button("Quit") {
+                    NSApp.terminate(nil)
+                }
             }
             .controlSize(.small)
-            Button("Widget") {
-                openWindow(id: "desktop-widget")
-            }
-            .controlSize(.small)
-            Spacer()
-            Button("Quit") {
-                NSApp.terminate(nil)
-            }
-            .controlSize(.small)
+
+            // Reachable from here on purpose: in menu-bar-only mode this panel is the
+            // only interface, so the way back to a normal window has to live in it.
+            Toggle("Show only in the menu bar", isOn: $settings.menuBarOnly)
+                .toggleStyle(.checkbox)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .help("Hides the Dock icon. Uncheck to get the Dock icon and window back.")
         }
     }
 
@@ -86,9 +95,9 @@ struct CompactControlsView: View {
 
     private var ancRow: some View {
         HStack(spacing: 6) {
-            compactModeButton("NC", icon: "person.wave.2.fill", mode: .noiseCancelling)
-            compactModeButton("Ambient", icon: "waveform.and.person.filled", mode: .ambientSound)
-            compactModeButton("Off", icon: "xmark", mode: .off)
+            compactModeButton("NC", spoken: "Noise Canceling", icon: "person.wave.2.fill", mode: .noiseCancelling)
+            compactModeButton("Ambient", spoken: "Ambient Sound", icon: "waveform.and.person.filled", mode: .ambientSound)
+            compactModeButton("Off", spoken: "Off", icon: "xmark", mode: .off)
         }
     }
 
@@ -98,8 +107,11 @@ struct CompactControlsView: View {
             Slider(
                 value: Binding(
                     get: { Double(controller.ambientSound?.level ?? 15) },
+                    // Falls back to a default state rather than bailing out: when the
+                    // headphones never reported ambient sound, the old `guard` left a
+                    // slider that moved under the cursor and silently did nothing.
                     set: { newValue in
-                        guard var state = controller.ambientSound else { return }
+                        var state = controller.ambientSound ?? AmbientSoundState(mode: .ambientSound)
                         state.level = Int(newValue.rounded())
                         controller.setAmbientSound(state)
                     }
@@ -107,6 +119,7 @@ struct CompactControlsView: View {
                 in: 0...20, step: 1
             )
             .controlSize(.mini)
+            .accessibilityLabel("Ambient sound level")
             Image(systemName: "speaker.wave.3").font(.caption2).foregroundStyle(.secondary)
         }
     }
@@ -130,17 +143,24 @@ struct CompactControlsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()
-            Picker("Equalizer", selection: Binding(
-                get: { controller.equalizer?.preset ?? .off },
-                set: { controller.setEqualizerPreset($0) }
-            )) {
+            // A Menu rather than a Picker so the current value can be a label the
+            // enum doesn't contain. The device can report a personalized preset id,
+            // and a Picker forced that through `?? .off`, showing "Off" while the
+            // headphones were using something else entirely.
+            Menu(currentEqualizerLabel) {
                 ForEach(EqualizerPreset.allCases) { preset in
-                    Text(preset.label).tag(preset)
+                    Button(preset.label) { controller.setEqualizerPreset(preset) }
                 }
             }
-            .labelsHidden()
+            .menuStyle(.borderlessButton)
             .fixedSize()
+            .accessibilityLabel("Equalizer preset, \(currentEqualizerLabel)")
         }
+    }
+
+    private var currentEqualizerLabel: String {
+        guard let equalizer = controller.equalizer else { return EqualizerPreset.off.label }
+        return equalizer.preset?.label ?? "Personalized"
     }
 
     private func devicesRow(_ devices: [MultipointDevice]) -> some View {
@@ -198,7 +218,14 @@ struct CompactControlsView: View {
         }
     }
 
-    private func compactModeButton(_ label: String, icon: String, mode: AmbientSoundMode) -> some View {
+    /// `spoken` carries the full name for VoiceOver and the tooltip, since the visible
+    /// captions are abbreviated to fit ("NC") or are icon-only in meaning ("Off").
+    private func compactModeButton(
+        _ label: String,
+        spoken accessibilityName: String,
+        icon: String,
+        mode: AmbientSoundMode
+    ) -> some View {
         let current = controller.ambientSound?.mode
         let isSelected = current == mode
         return Button {
@@ -213,11 +240,14 @@ struct CompactControlsView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
             .background(
-                RoundedRectangle(cornerRadius: 9)
+                RoundedRectangle(cornerRadius: Radius.control)
                     .fill(isSelected ? AnyShapeStyle(Color.brand) : AnyShapeStyle(Color.primary.opacity(0.06)))
             )
             .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.8))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityName)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }

@@ -15,10 +15,14 @@ struct ConnectionCard: View {
                         }
                     }
 
-                    Text("Click a connected device to make it the playback source.")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .padding(.top, 8)
+                    // Only worth saying when there is actually another device to
+                    // switch to; otherwise it's instructions for an impossible action.
+                    if devices.contains(where: { $0.isConnected && !$0.isPlayback }) {
+                        Text("Click a connected device to make it the playback source.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 6)
+                    }
                 }
             } else if controller.initialStateTimedOut {
                 Text("The headphones didn't report their device list.")
@@ -72,6 +76,18 @@ struct ConnectionCard: View {
         }
         .buttonStyle(.plain)
         .disabled(!device.isConnected || device.isPlayback)
+        .accessibilityLabel(accessibilityDescription(for: device))
+        .accessibilityAddTraits(device.isPlayback ? [.isButton, .isSelected] : .isButton)
+        .accessibilityHint(
+            device.isConnected && !device.isPlayback ? "Switches playback to this device" : ""
+        )
+    }
+
+    private func accessibilityDescription(for device: MultipointDevice) -> String {
+        let state = device.isPlayback
+            ? "currently playing"
+            : (device.isConnected ? "connected" : "paired, not connected")
+        return "\(device.name), \(state)"
     }
 
     private func deviceIcon(for name: String) -> String {

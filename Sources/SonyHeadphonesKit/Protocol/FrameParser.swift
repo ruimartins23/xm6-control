@@ -11,6 +11,13 @@ import Foundation
 public final class FrameParser {
     private var buffer: [UInt8] = []
 
+    /// Ceiling on the reassembly buffer. A header byte with no trailer ever following
+    /// (a truncated or corrupt stream) would otherwise make the buffer grow for the
+    /// lifetime of the connection, since an incomplete frame is deliberately kept for
+    /// the next read. Real frames are a handful of bytes; the largest observed is the
+    /// multipoint device list at well under 1 KB.
+    private static let maxBufferedBytes = 8192
+
     public init() {}
 
     public func reset() {
@@ -36,7 +43,15 @@ public final class FrameParser {
                 trailerIndex = i
                 break
             }
-            guard let end = trailerIndex else { break }
+            guard let end = trailerIndex else {
+                // Incomplete frame: keep it for the next read, unless it has grown
+                // past anything this protocol can legitimately produce, in which case
+                // the stream is desynchronised and holding the bytes helps nothing.
+                if buffer.count > Self.maxBufferedBytes {
+                    buffer.removeAll()
+                }
+                break
+            }
 
             let frame = Array(buffer[0...end])
             if let message = SonyMessage.decode(rawFrame: frame) {
