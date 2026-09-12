@@ -22,14 +22,22 @@ struct ContentView: View {
             )
             .ignoresSafeArea()
 
-            switch controller.connectionState {
-            case .disconnected, .failed, .searching:
-                DisconnectedView()
-            case .connecting, .initializing:
-                ConnectingView()
-            case .connected:
-                DashboardView()
+            Group {
+                switch controller.connectionState {
+                case .disconnected, .failed, .searching:
+                    DisconnectedView()
+                case .connecting, .initializing:
+                    ConnectingView()
+                case .connected:
+                    DashboardView()
+                }
             }
+            // Keyed by phase so SwiftUI treats a connection change as a real
+            // insertion and removal, which is what lets the transition run instead of
+            // the dashboard snapping into place.
+            .id(scenePhase)
+            .transition(.opacity.combined(with: .offset(y: 10)))
+            .animation(Motion.sceneChange, value: scenePhase)
         }
         // No explicit tint: selection follows the user's System Settings accent,
         // which is what every other Mac app does.
@@ -41,6 +49,17 @@ struct ContentView: View {
             if controller.connectionState == .disconnected && !ProbeMode.active {
                 controller.autoConnect()
             }
+        }
+    }
+
+    /// Collapses the connection states into the three things the UI actually shows,
+    /// so moving between, say, connecting and initializing doesn't re-run the
+    /// transition on a view that hasn't changed.
+    private var scenePhase: Int {
+        switch controller.connectionState {
+        case .disconnected, .failed, .searching: return 0
+        case .connecting, .initializing: return 1
+        case .connected: return 2
         }
     }
 }

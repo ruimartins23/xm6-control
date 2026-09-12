@@ -42,7 +42,7 @@ struct ListeningModeSection: View {
                         .transition(.opacity)
                     }
                 }
-                .animation(.easeInOut(duration: 0.18), value: mode)
+                .animation(Motion.transition, value: mode)
             } else {
                 LoadingRow()
             }

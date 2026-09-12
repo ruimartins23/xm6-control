@@ -54,7 +54,7 @@ struct SpeakToChatSection: View {
                         .controlSize(.small)
                     }
                 }
-                .animation(.easeInOut(duration: 0.18), value: enabled)
+                .animation(Motion.transition, value: enabled)
             } else {
                 LoadingRow()
             }

@@ -71,13 +71,15 @@ private struct ModeSelectorButton<Value: Hashable>: View {
                 Text(option.title)
                     .font(.caption2.weight(isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+                    // Cross-fade rather than a hard swap when selection moves.
+                    .animation(Motion.transition, value: isSelected)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
         .help(accessibilityName)
         .accessibilityLabel(accessibilityName)
         // Selection is communicated to assistive tech as a trait, not inferred from

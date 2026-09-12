@@ -50,7 +50,7 @@ struct EqualizerSection: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                .animation(.easeInOut(duration: 0.18), value: isCustomActive)
+                .animation(Motion.transition, value: isCustomActive)
             } else {
                 LoadingRow()
             }
@@ -130,7 +130,7 @@ struct EqualizerSection: View {
                 )
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle(scale: 0.96))
         .accessibilityLabel("\(preset.label) equalizer preset")
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }

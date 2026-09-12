@@ -74,7 +74,7 @@ struct ConnectionCard: View {
             .padding(.vertical, 6)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle(scale: 0.985))
         .disabled(!device.isConnected || device.isPlayback)
         .accessibilityLabel(accessibilityDescription(for: device))
         .accessibilityAddTraits(device.isPlayback ? [.isButton, .isSelected] : .isButton)

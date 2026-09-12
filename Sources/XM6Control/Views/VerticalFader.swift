@@ -37,9 +37,17 @@ struct VerticalFader: NSViewRepresentable {
     func updateNSView(_ nsView: NSSlider, context: Context) {
         context.coordinator.onChange = onChange
         // Only write back when the model genuinely differs, so a change coming from
-        // the headphones moves the knob without fighting an in-progress drag.
+        // the headphones moves the knob without fighting an in-progress drag. During a
+        // drag the slider already holds the model's value, so this doesn't fire and
+        // the knob stays glued to the pointer; it runs for external changes such as
+        // picking a preset or resetting to flat, where a knob teleporting across the
+        // track reads as a glitch.
         if Int(nsView.doubleValue.rounded()) != value {
-            nsView.doubleValue = Double(value)
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.22
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                nsView.animator().doubleValue = Double(value)
+            }
         }
     }
 

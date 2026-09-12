@@ -243,7 +243,7 @@ struct CompactControlsView: View {
             )
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle(scale: 0.95))
         .accessibilityLabel(accessibilityName)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }

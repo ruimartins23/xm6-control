@@ -35,7 +35,7 @@ struct NoiseControlCard: View {
                             .transition(.opacity)
                     }
                 }
-                .animation(.easeInOut(duration: 0.18), value: state.mode)
+                .animation(Motion.transition, value: state.mode)
             } else {
                 LoadingRow()
             }
