@@ -56,6 +56,7 @@ public final class HeadphonesController: ObservableObject {
     private var initRetryTask: Task<Void, Never>?
     private var stateTimeoutTask: Task<Void, Never>?
     private var connectTimeoutTask: Task<Void, Never>?
+    private var equalizerWriteTask: Task<Void, Never>?
     private var initRetryCount = 0
     private var connectRetryCount = 0
     private var connectTarget: (address: String, name: String?)?
@@ -141,6 +142,7 @@ public final class HeadphonesController: ObservableObject {
         initRetryTask?.cancel()
         stateTimeoutTask?.cancel()
         connectTimeoutTask?.cancel()
+        equalizerWriteTask?.cancel()
         connectTarget = nil
         connection.disconnect()
         connectionState = .disconnected
@@ -187,7 +189,34 @@ public final class HeadphonesController: ObservableObject {
         enqueue(SonyCommands.buildPauseWhenTakenOffSet(enabled))
     }
 
+    /// Writes a custom equalizer curve, coalescing rapid changes.
+    ///
+    /// Slider drags produce a continuous stream of values, and the protocol is
+    /// stop-and-wait: one outstanding command at a time, each waiting for an ACK.
+    /// Queueing every intermediate value would back the queue up for seconds after
+    /// the user let go. Only the latest curve is ever in flight, so dragging stays
+    /// responsive and the headphones follow within a moment of the slider settling.
+    public func setEqualizerBands(_ bands: [Int]) {
+        let subtype = equalizer?.subtype ?? 0x04
+        // Optimistic, so the sliders track the drag rather than the device's replies.
+        equalizer = EqualizerState(
+            presetCode: EqualizerPreset.custom.rawValue,
+            bands: bands,
+            subtype: subtype
+        )
+
+        equalizerWriteTask?.cancel()
+        equalizerWriteTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 120_000_000)
+            guard let self, !Task.isCancelled else { return }
+            self.enqueue(SonyCommands.buildEqualizerBandsSet(bands: bands, subtype: subtype))
+        }
+    }
+
     public func setEqualizerPreset(_ preset: EqualizerPreset) {
+        // A queued curve from a drag would otherwise land after this and drag the
+        // device back to the custom preset.
+        equalizerWriteTask?.cancel()
         let subtype = equalizer?.subtype ?? 0x04
         equalizer = EqualizerState(presetCode: preset.rawValue, bands: equalizer?.bands ?? [], subtype: subtype)
         enqueue(SonyCommands.buildEqualizerPresetSet(code: preset.rawValue, subtype: subtype))
@@ -228,6 +257,7 @@ public final class HeadphonesController: ObservableObject {
         initRetryTask?.cancel()
         stateTimeoutTask?.cancel()
         connectTimeoutTask?.cancel()
+        equalizerWriteTask?.cancel()
         initRetryCount = 0
         didApplyConnectDefaults = false
         initialStateTimedOut = false

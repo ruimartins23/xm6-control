@@ -134,6 +134,35 @@ public enum SonyCommands {
         [Opcode.equalizerSet, subtype, code, 0x00]
     }
 
+    /// Lowest and highest gain a band can carry, in the units the UI works in.
+    /// The wire format stores gain biased by `bandOffset`, so the symmetric range
+    /// either side of neutral is what the byte can represent.
+    public static let bandGainRange = -6...6
+    /// Number of bands the XM6 reports and accepts, low frequency first.
+    public static let defaultBandCount = 10
+    private static let bandOffset = 6
+
+    /// Writes a custom equalizer curve. Selecting the custom preset is implicit:
+    /// the headphones switch to it and echo the curve back.
+    ///
+    /// Verified against a live WH-1000XM6: writing
+    /// `58 04 a0 0a 09 08 07 06 05 04 03 06 06 06` is echoed back byte for byte on
+    /// the notify and survives a subsequent read, so the 10-band layout and the
+    /// offset are both confirmed rather than inferred.
+    public static func buildEqualizerBandsSet(bands: [Int], subtype: UInt8) -> [UInt8] {
+        var payload: [UInt8] = [
+            Opcode.equalizerSet,
+            subtype,
+            EqualizerPreset.custom.rawValue,
+            UInt8(bands.count),
+        ]
+        for gain in bands {
+            let clamped = min(max(gain, bandGainRange.lowerBound), bandGainRange.upperBound)
+            payload.append(UInt8(clamped + bandOffset))
+        }
+        return payload
+    }
+
     public static func decodeEqualizer(_ payload: [UInt8]) -> EqualizerState? {
         guard payload.count >= 4 else { return nil }
         let subtype = payload[1]
