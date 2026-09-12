@@ -11,7 +11,7 @@ struct ListeningModeSection: View {
     }
 
     var body: some View {
-        CardSection("Listening Mode") {
+        CardSection("Listening Mode", icon: "music.note") {
             if let mode = effectiveMode {
                 VStack(alignment: .leading, spacing: 12) {
                     if controller.listeningMode == nil {

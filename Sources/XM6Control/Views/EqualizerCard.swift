@@ -27,7 +27,7 @@ struct EqualizerSection: View {
     }
 
     var body: some View {
-        CardSection("Equalizer") {
+        CardSection("Equalizer", icon: "slider.vertical.3") {
             if let presetCode = effectivePresetCode {
                 VStack(alignment: .leading, spacing: 10) {
                     if controller.equalizer == nil {
@@ -123,39 +123,11 @@ struct EqualizerSection: View {
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
-                // Same raised-versus-recessed language as the mode selectors.
-                .background(
-                    RoundedRectangle(cornerRadius: Radius.control)
-                        .fill(
-                            isSelected
-                                ? AnyShapeStyle(
-                                    LinearGradient(
-                                        colors: [Color.brand, Color.brand.opacity(0.82)],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                )
-                                : AnyShapeStyle(Color.black.opacity(0.14))
-                        )
-                        .shadow(
-                            color: Color.black.opacity(isSelected ? 0.30 : 0),
-                            radius: 3,
-                            y: 1
-                        )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: Radius.control).strokeBorder(
-                        LinearGradient(
-                            colors: isSelected
-                                ? [Color.white.opacity(0.40), Color.white.opacity(0.04)]
-                                : [Color.black.opacity(0.28), Color.white.opacity(0.09)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
-                    )
-                )
                 .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.85))
+                .controlSurface(
+                    RoundedRectangle(cornerRadius: Radius.control),
+                    isSelected: isSelected
+                )
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

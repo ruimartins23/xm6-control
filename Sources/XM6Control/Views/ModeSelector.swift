@@ -62,51 +62,11 @@ private struct ModeSelectorButton<Value: Hashable>: View {
             select(option.value)
         } label: {
             VStack(spacing: 7) {
-                ZStack {
-                    // Selected reads as a raised physical button, unselected as a well
-                    // pressed into the card. That difference is the depth cue; there is
-                    // still no coloured halo, which is decoration rather than state.
-                    Circle()
-                        .fill(
-                            isSelected
-                                ? AnyShapeStyle(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.brand.opacity(1.0),
-                                            Color.brand.opacity(0.82),
-                                        ],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                )
-                                : AnyShapeStyle(Color.black.opacity(0.16))
-                        )
-                        .overlay(
-                            Circle().strokeBorder(
-                                LinearGradient(
-                                    colors: isSelected
-                                        // Lit along the top edge, like a key-lit control.
-                                        ? [Color.white.opacity(0.45), Color.white.opacity(0.05)]
-                                        // Darker at the top, which is what makes a
-                                        // recess read as sunken rather than raised.
-                                        : [Color.black.opacity(0.32), Color.white.opacity(0.10)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                ),
-                                lineWidth: 1
-                            )
-                        )
-                        .shadow(
-                            color: Color.black.opacity(isSelected ? 0.35 : 0),
-                            radius: 4,
-                            y: 2
-                        )
-
-                    Image(systemName: option.icon)
-                        .font(.system(size: 19, weight: isSelected ? .semibold : .regular))
-                        .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.75))
-                }
-                .frame(width: 54, height: 54)
+                Image(systemName: option.icon)
+                    .font(.system(size: 19, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.75))
+                    .frame(width: 54, height: 54)
+                    .controlSurface(Circle(), isSelected: isSelected)
 
                 Text(option.title)
                     .font(.caption2.weight(isSelected ? .semibold : .regular))

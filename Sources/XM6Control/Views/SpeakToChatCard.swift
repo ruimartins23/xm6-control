@@ -16,7 +16,7 @@ struct SpeakToChatSection: View {
     }
 
     var body: some View {
-        CardSection("Speak-to-Chat") {
+        CardSection("Speak-to-Chat", icon: "mic") {
             if let enabled = effectiveEnabled {
                 VStack(alignment: .leading, spacing: 10) {
                     if controller.speakToChatEnabled == nil {

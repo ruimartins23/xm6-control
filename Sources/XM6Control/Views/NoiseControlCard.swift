@@ -9,7 +9,7 @@ struct NoiseControlCard: View {
     }
 
     var body: some View {
-        Card("Ambient Sound Control") {
+        Card("Ambient Sound Control", icon: "waveform") {
             if let state = effectiveState {
                 VStack(spacing: 14) {
                     if controller.ambientSound == nil {

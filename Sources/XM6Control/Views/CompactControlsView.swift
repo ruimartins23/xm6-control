@@ -75,20 +75,16 @@ struct CompactControlsView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Image(systemName: "headphones")
+            // The same drawn glyph as the menu bar item, so the panel is visibly the
+            // same app as the icon it dropped out of.
+            Image(nsImage: .xm6MenuBarIcon(size: 15))
                 .foregroundStyle(Color.brand)
             Text(controller.deviceName ?? "WH-1000XM6")
                 .font(.callout.weight(.semibold))
                 .lineLimit(1)
             Spacer()
             if let battery = controller.battery {
-                HStack(spacing: 3) {
-                    Image(systemName: battery.isCharging ? "battery.100.bolt" : "battery.75")
-                    Text("\(battery.level)%")
-                        .font(.caption.monospacedDigit())
-                }
-                .font(.caption)
-                .foregroundStyle(battery.level < 20 && !battery.isCharging ? Color.red : Color.secondary)
+                BatteryGauge(level: battery.level, isCharging: battery.isCharging)
             }
         }
     }
@@ -172,8 +168,9 @@ struct CompactControlsView: View {
                     }
                 } label: {
                     HStack(spacing: 6) {
-                        Image(systemName: device.isPlayback ? "speaker.wave.2.fill" : "circle")
-                            .font(.caption2)
+                        Image(systemName: symbolForDevice(named: device.name))
+                            .font(.caption)
+                            .frame(width: 16)
                             .foregroundStyle(device.isPlayback ? Color.brand : Color.secondary)
                         Text(device.name)
                             .font(.caption)
@@ -239,11 +236,11 @@ struct CompactControlsView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
-            .background(
-                RoundedRectangle(cornerRadius: Radius.control)
-                    .fill(isSelected ? AnyShapeStyle(Color.brand) : AnyShapeStyle(Color.primary.opacity(0.06)))
-            )
             .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.8))
+            .controlSurface(
+                RoundedRectangle(cornerRadius: Radius.control),
+                isSelected: isSelected
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

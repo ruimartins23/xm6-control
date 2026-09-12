@@ -5,7 +5,7 @@ struct ConnectionCard: View {
     @EnvironmentObject private var controller: HeadphonesController
 
     var body: some View {
-        Card("Connected Devices") {
+        Card("Connected Devices", icon: "laptopcomputer.and.iphone") {
             if let devices = controller.devices, !devices.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(devices) { device in
@@ -91,10 +91,17 @@ struct ConnectionCard: View {
     }
 
     private func deviceIcon(for name: String) -> String {
-        let lowered = name.lowercased()
-        if lowered.contains("iphone") || lowered.contains("phone") { return "iphone" }
-        if lowered.contains("ipad") || lowered.contains("tab") { return "ipad" }
-        if lowered.contains("book") || lowered.contains("mac") || lowered.contains("pc") { return "laptopcomputer" }
-        return "desktopcomputer"
+        symbolForDevice(named: name)
     }
+}
+
+/// Guesses a glyph from the device's advertised name. Shared with the menu bar panel
+/// so a device doesn't appear as a laptop in one place and a generic box in another.
+func symbolForDevice(named name: String) -> String {
+    let lowered = name.lowercased()
+    if lowered.contains("iphone") || lowered.contains("phone") { return "iphone" }
+    if lowered.contains("ipad") || lowered.contains("tab") { return "ipad" }
+    if lowered.contains("watch") { return "applewatch" }
+    if lowered.contains("book") || lowered.contains("mac") || lowered.contains("pc") { return "laptopcomputer" }
+    return "desktopcomputer"
 }

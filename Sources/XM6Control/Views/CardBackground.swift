@@ -80,25 +80,75 @@ extension View {
     }
 }
 
+/// The selection treatment shared by every pick-one control in the app: mode
+/// selectors, equalizer chips, and the menu bar panel's buttons.
+///
+/// Selected reads as a raised, top-lit button; unselected as a well pressed into
+/// the surface. Keeping it in one place is what stops the panel and the window
+/// drifting into different visual languages, and it means state is a physical
+/// difference rather than only a change of colour.
+struct ControlSurface<S: InsettableShape>: ViewModifier {
+    let shape: S
+    let isSelected: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                shape.fill(
+                    isSelected
+                        ? AnyShapeStyle(
+                            LinearGradient(
+                                colors: [Color.brand, Color.brand.opacity(0.80)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        : AnyShapeStyle(Color.black.opacity(0.16))
+                )
+                .shadow(color: Color.black.opacity(isSelected ? 0.32 : 0), radius: 4, y: 2)
+            )
+            .overlay(
+                shape.strokeBorder(
+                    LinearGradient(
+                        colors: isSelected
+                            // Lit along the top edge, like a key-lit control.
+                            ? [Color.white.opacity(0.45), Color.white.opacity(0.05)]
+                            // Dark along the top is what makes a recess read as sunken.
+                            : [Color.black.opacity(0.32), Color.white.opacity(0.10)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 1
+                )
+            )
+    }
+}
+
+extension View {
+    func controlSurface<S: InsettableShape>(_ shape: S, isSelected: Bool) -> some View {
+        modifier(ControlSurface(shape: shape, isSelected: isSelected))
+    }
+}
+
 /// A rounded glass card container. Reserved for groups that genuinely deserve their
 /// own elevated surface: related controls that are grouped inside a card use
 /// `CardSection` instead, so secondary settings don't each spawn a panel and flatten
 /// the hierarchy.
 struct Card<Content: View>: View {
     let title: String?
+    let icon: String?
     @ViewBuilder let content: Content
 
-    init(_ title: String? = nil, @ViewBuilder content: () -> Content) {
+    init(_ title: String? = nil, icon: String? = nil, @ViewBuilder content: () -> Content) {
         self.title = title
+        self.icon = icon
         self.content = content()
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let title {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                SectionLabel(title: title, icon: icon, font: .subheadline.weight(.semibold))
             }
             content
         }
@@ -108,24 +158,46 @@ struct Card<Content: View>: View {
     }
 }
 
+/// Heading for a card or a section. The glyph is not decoration: with several
+/// groups on one surface it is what lets you find the one you want without
+/// reading every label.
+struct SectionLabel: View {
+    let title: String
+    let icon: String?
+    var font: Font = .caption.weight(.semibold)
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundStyle(Color.brand)
+                    .frame(width: 14)
+            }
+            Text(title)
+                .font(font)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
 /// A labeled group of controls *inside* a card. Lets several related settings share
 /// one surface, which is what keeps the dashboard from being a stack of identical
 /// panels with no visual ranking.
 struct CardSection<Content: View>: View {
     let title: String
+    let icon: String?
     @ViewBuilder let content: Content
 
-    init(_ title: String, @ViewBuilder content: () -> Content) {
+    init(_ title: String, icon: String? = nil, @ViewBuilder content: () -> Content) {
         self.title = title
+        self.icon = icon
         self.content = content()
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(nil)
+            SectionLabel(title: title, icon: icon)
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)

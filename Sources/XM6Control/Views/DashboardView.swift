@@ -6,19 +6,46 @@ struct DashboardView: View {
     @EnvironmentObject private var settings: AppSettings
     @Environment(\.openWindow) private var openWindow
 
+    /// Above this width the cards sit in two columns. Below it they stack. A single
+    /// column stretched to a wide window turns every card into a mostly-empty slab,
+    /// which is what made the interface look barren when resized.
+    private static let twoColumnWidth: CGFloat = 720
+    /// Content stops growing past this, so a maximised window centres the layout
+    /// instead of stretching controls apart.
+    private static let maxContentWidth: CGFloat = 1000
+
     var body: some View {
-        ScrollView {
-            // Ranked top to bottom: the control most likely to be the reason the
-            // window was opened first, set-once preferences last.
-            VStack(spacing: 12) {
-                HeaderView()
-                NoiseControlCard()
-                SoundCard()
-                ConnectionCard()
-                BehaviorCard()
-                footer
+        GeometryReader { geometry in
+            let isWide = geometry.size.width >= Self.twoColumnWidth
+
+            ScrollView {
+                VStack(spacing: 14) {
+                    HeaderView(horizontal: isWide)
+
+                    if isWide {
+                        HStack(alignment: .top, spacing: 14) {
+                            VStack(spacing: 14) {
+                                NoiseControlCard()
+                                SoundCard()
+                            }
+                            VStack(spacing: 14) {
+                                ConnectionCard()
+                                BehaviorCard()
+                            }
+                        }
+                    } else {
+                        NoiseControlCard()
+                        SoundCard()
+                        ConnectionCard()
+                        BehaviorCard()
+                    }
+
+                    footer
+                }
+                .frame(maxWidth: Self.maxContentWidth)
+                .frame(maxWidth: .infinity)
+                .padding(16)
             }
-            .padding(16)
         }
     }
 
@@ -51,21 +78,22 @@ struct DashboardView: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Toggle("Show only in the menu bar", isOn: $settings.menuBarOnly)
-                    .toggleStyle(.checkbox)
-                    .help("Hides the Dock icon. The menu bar panel stays available, and you can reopen this window from there.")
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle("Show only in the menu bar", isOn: $settings.menuBarOnly)
+                        .toggleStyle(.checkbox)
+                        .help("Hides the Dock icon. The menu bar panel stays available, and you can reopen this window from there.")
 
-                Toggle("Debug log", isOn: $controller.protocolLoggingEnabled)
-                    .toggleStyle(.checkbox)
-                    .help("Write a hex transcript of every frame to protocol.log")
-
+                    Toggle("Debug log", isOn: $controller.protocolLoggingEnabled)
+                        .toggleStyle(.checkbox)
+                        .help("Write a hex transcript of every frame to protocol.log")
+                }
+                Spacer()
                 Text(footerText)
                     .foregroundStyle(.tertiary)
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.top, 2)
     }

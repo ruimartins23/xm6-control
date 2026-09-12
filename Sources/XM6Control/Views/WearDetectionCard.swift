@@ -14,7 +14,7 @@ struct WearDetectionSection: View {
     }
 
     var body: some View {
-        CardSection("Wearing Detection") {
+        CardSection("Wearing Detection", icon: "sensor.tag.radiowaves.forward") {
             VStack(alignment: .leading, spacing: 10) {
                 if controller.initialStateTimedOut
                     && (controller.pauseWhenTakenOff == nil || controller.automaticPowerOff == nil) {
