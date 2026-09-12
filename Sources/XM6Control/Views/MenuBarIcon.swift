@@ -9,47 +9,68 @@ import AppKit
 /// foreground colour is the only thing that stays correct everywhere. Being one
 /// combined path, including the headband, means it behaves like a template image.
 ///
-/// Proportioned after the XM6 itself: a slim headband over tall, softly rounded
-/// earcups, rather than the wide circular cups of the generic headphone symbol.
+/// Proportioned after the XM6 itself. Three traits carry the likeness at this size,
+/// and a plain semicircle-over-small-pads drawing reads as generic headphones
+/// instead:
+///   - the headband is slim and arches with near-vertical sides, not a semicircle
+///   - the earcups are tall ovals that sit *wider* than the band, so the band looks
+///     inset between them
+///   - the cups hang well below the band rather than capping its ends
 struct XM6HeadphonesGlyph: Shape {
     func path(in rect: CGRect) -> Path {
         let s = min(rect.width, rect.height)
+        let centerX = rect.midX
 
-        // Headband: upper half of a circle, stroked then flattened into the fill path
-        // so the whole glyph is a single shape.
-        let bandRadius = s * 0.32
-        let bandCenter = CGPoint(x: rect.midX, y: rect.minY + s * 0.55)
-        var combined = Path { p in
-            p.addArc(
-                center: bandCenter,
-                radius: bandRadius,
-                startAngle: .degrees(180),
-                endAngle: .degrees(360),
-                clockwise: false
+        // Headband: straight sides into one broad cubic across the top. A circular
+        // arc gives the dome of the generic headphone symbol; the XM6's band is
+        // flatter over the crown and drops almost vertically at the sides.
+        let bandHalfWidth = s * 0.26
+        let archTopY = rect.minY + s * 0.02
+        let archShoulderY = rect.minY + s * 0.32
+        // Ends deep inside the earcup so the joint is buried rather than showing a
+        // visible cap where band meets cup.
+        let shoulderY = rect.minY + s * 0.56
+        let bandStroke = s * 0.07
+
+        let band = Path { p in
+            p.move(to: CGPoint(x: centerX - bandHalfWidth, y: shoulderY))
+            p.addLine(to: CGPoint(x: centerX - bandHalfWidth, y: archShoulderY))
+            p.addCurve(
+                to: CGPoint(x: centerX + bandHalfWidth, y: archShoulderY),
+                control1: CGPoint(x: centerX - bandHalfWidth, y: archTopY),
+                control2: CGPoint(x: centerX + bandHalfWidth, y: archTopY)
             )
+            p.addLine(to: CGPoint(x: centerX + bandHalfWidth, y: shoulderY))
         }
-        .strokedPath(StrokeStyle(lineWidth: s * 0.12, lineCap: .round))
+        .strokedPath(StrokeStyle(lineWidth: bandStroke, lineCap: .butt))
 
-        // Earcups, hanging from the ends of the band.
-        let cupWidth = s * 0.22
-        let cupHeight = s * 0.40
-        let cupTop = rect.minY + s * 0.46
-        let corner = CGSize(width: s * 0.10, height: s * 0.10)
+        // Earcups: tall ovals, set outboard of the band so the band reads as inset
+        // between them, and deep enough to swallow the shoulder ends.
+        let cupWidth = s * 0.32
+        let cupHeight = s * 0.48
+        let cupTop = rect.minY + s * 0.40
+        let cupOffset = s * 0.32
 
+        // Unioned rather than just accumulated into one path: the stroked band and the
+        // cup rectangles wind in opposite directions, so overlapping them in a single
+        // path punches holes where they cross instead of merging.
+        var merged = band.cgPath
         for direction in [-1.0, 1.0] {
-            let centerX = bandCenter.x + CGFloat(direction) * bandRadius
-            combined.addRoundedRect(
-                in: CGRect(
-                    x: centerX - cupWidth / 2,
+            let cupCenterX = centerX + CGFloat(direction) * cupOffset
+            let cup = Path(
+                roundedRect: CGRect(
+                    x: cupCenterX - cupWidth / 2,
                     y: cupTop,
                     width: cupWidth,
                     height: cupHeight
                 ),
-                cornerSize: corner
+                // Half the width, so the cup is a true oval-ended capsule.
+                cornerRadius: cupWidth / 2
             )
+            merged = merged.union(cup.cgPath)
         }
 
-        return combined
+        return Path(merged)
     }
 }
 
