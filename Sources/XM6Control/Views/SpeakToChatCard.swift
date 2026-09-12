@@ -23,35 +23,48 @@ struct SpeakToChatSection: View {
                         StateNotReportedBanner()
                     }
 
-                    Toggle("Pause playback when you talk", isOn: Binding(
-                        get: { enabled },
-                        set: { controller.setSpeakToChatEnabled($0) }
-                    ))
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
+                    SettingsRow("Pause playback when you talk") {
+                        Toggle("", isOn: Binding(
+                            get: { enabled },
+                            set: { controller.setSpeakToChatEnabled($0) }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                    }
 
                     if enabled {
                         let config = effectiveConfig
 
-                        Picker("Sensitivity", selection: Binding(
-                            get: { config.sensitivity },
-                            set: { controller.setSpeakToChatConfig(SpeakToChatConfigState(sensitivity: $0, timeout: config.timeout)) }
-                        )) {
-                            ForEach(SpeakToChatSensitivity.allCases) { option in
-                                Text(option.label).tag(option)
-                            }
-                        }
-                        .controlSize(.small)
+                        Divider()
 
-                        Picker("Resume After", selection: Binding(
-                            get: { config.timeout },
-                            set: { controller.setSpeakToChatConfig(SpeakToChatConfigState(sensitivity: config.sensitivity, timeout: $0)) }
-                        )) {
-                            ForEach(SpeakToChatTimeout.allCases) { option in
-                                Text(option.label).tag(option)
+                        SettingsRow("Sensitivity") {
+                            Picker("", selection: Binding(
+                                get: { config.sensitivity },
+                                set: { controller.setSpeakToChatConfig(SpeakToChatConfigState(sensitivity: $0, timeout: config.timeout)) }
+                            )) {
+                                ForEach(SpeakToChatSensitivity.allCases) { option in
+                                    Text(option.label).tag(option)
+                                }
                             }
+                            .labelsHidden()
+                            .controlSize(.small)
+                            .fixedSize()
                         }
-                        .controlSize(.small)
+
+                        SettingsRow("Resume after") {
+                            Picker("", selection: Binding(
+                                get: { config.timeout },
+                                set: { controller.setSpeakToChatConfig(SpeakToChatConfigState(sensitivity: config.sensitivity, timeout: $0)) }
+                            )) {
+                                ForEach(SpeakToChatTimeout.allCases) { option in
+                                    Text(option.label).tag(option)
+                                }
+                            }
+                            .labelsHidden()
+                            .controlSize(.small)
+                            .fixedSize()
+                        }
                     }
                 }
                 .animation(Motion.transition, value: enabled)

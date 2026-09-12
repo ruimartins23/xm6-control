@@ -34,11 +34,7 @@ struct GlassSurface: ViewModifier {
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .strokeBorder(
                         LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.22),
-                                Color.white.opacity(0.06),
-                                Color.black.opacity(0.10),
-                            ],
+                            colors: [Surface.cardEdgeTop, Surface.cardEdgeBottom],
                             startPoint: .top,
                             endPoint: .bottom
                         ),
@@ -47,8 +43,8 @@ struct GlassSurface: ViewModifier {
             )
             // Elevation. Two shadows rather than one: a tight contact shadow that
             // separates the card from the panel, and a wider soft one for depth.
-            .shadow(color: Color.black.opacity(0.22), radius: 2, y: 1)
-            .shadow(color: Color.black.opacity(0.16), radius: 14, y: 6)
+            .shadow(color: Surface.cardShadowContact, radius: 2, y: 1)
+            .shadow(color: Surface.cardShadowAmbient, radius: 14, y: 6)
     }
 
     @ViewBuilder
@@ -103,18 +99,18 @@ struct ControlSurface<S: InsettableShape>: ViewModifier {
                                 endPoint: .bottom
                             )
                         )
-                        : AnyShapeStyle(Color.black.opacity(0.16))
+                        : AnyShapeStyle(Surface.well)
                 )
-                .shadow(color: Color.black.opacity(isSelected ? 0.32 : 0), radius: 4, y: 2)
+                .shadow(color: isSelected ? Surface.pressShadow : .clear, radius: 4, y: 2)
             )
             .overlay(
                 shape.strokeBorder(
                     LinearGradient(
                         colors: isSelected
                             // Lit along the top edge, like a key-lit control.
-                            ? [Color.white.opacity(0.45), Color.white.opacity(0.05)]
+                            ? [Surface.raisedEdgeTop, Surface.raisedEdgeBottom]
                             // Dark along the top is what makes a recess read as sunken.
-                            : [Color.black.opacity(0.32), Color.white.opacity(0.10)],
+                            : [Surface.wellEdgeTop, Surface.wellEdgeBottom],
                         startPoint: .top,
                         endPoint: .bottom
                     ),
@@ -148,7 +144,7 @@ struct Card<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let title {
-                SectionLabel(title: title, icon: icon, font: .subheadline.weight(.semibold))
+                SectionLabel(title: title, icon: icon, font: .headline, prominent: true)
             }
             content
         }
@@ -165,7 +161,10 @@ struct Card<Content: View>: View {
 struct SectionLabel: View {
     let title: String
     let icon: String?
-    var font: Font = .caption.weight(.semibold)
+    var font: Font = .subheadline.weight(.semibold)
+    /// Card headings are the top of the hierarchy and take the primary colour;
+    /// sections nested inside a card step down to secondary.
+    var prominent: Bool = false
 
     var body: some View {
         HStack(spacing: 6) {
@@ -177,7 +176,7 @@ struct SectionLabel: View {
             }
             Text(title)
                 .font(font)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(prominent ? .primary : .secondary)
         }
     }
 }
@@ -225,5 +224,28 @@ struct LoadingRow: View {
             Spacer()
         }
         .padding(.vertical, 10)
+    }
+}
+
+
+/// A settings row: label left, control right, the way System Settings lays one out.
+/// Controls previously sat immediately after their label with the rest of the row
+/// empty, which read as unfinished rather than deliberate.
+struct SettingsRow<Control: View>: View {
+    let label: String
+    @ViewBuilder let control: Control
+
+    init(_ label: String, @ViewBuilder control: () -> Control) {
+        self.label = label
+        self.control = control()
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(label)
+            Spacer(minLength: 12)
+            control
+        }
+        .frame(minHeight: 22)
     }
 }

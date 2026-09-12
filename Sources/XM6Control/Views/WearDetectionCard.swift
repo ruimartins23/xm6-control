@@ -22,26 +22,35 @@ struct WearDetectionSection: View {
                 }
 
                 if let pauseWhenTakenOff = effectivePause {
-                    Toggle("Pause playback when taken off", isOn: Binding(
-                        get: { pauseWhenTakenOff },
-                        set: { controller.setPauseWhenTakenOff($0) }
-                    ))
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
+                    SettingsRow("Pause playback when taken off") {
+                        Toggle("", isOn: Binding(
+                            get: { pauseWhenTakenOff },
+                            set: { controller.setPauseWhenTakenOff($0) }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                    }
                 } else {
                     pendingRow("Pause playback when taken off")
                 }
 
+                Divider()
+
                 if let autoPowerOff = effectiveAutoPowerOff {
-                    Picker("Automatic Power Off", selection: Binding(
-                        get: { autoPowerOff },
-                        set: { controller.setAutomaticPowerOff($0) }
-                    )) {
-                        ForEach(AutomaticPowerOffMode.allCases) { option in
-                            Text(option.label).tag(option)
+                    SettingsRow("Automatic power off") {
+                        Picker("", selection: Binding(
+                            get: { autoPowerOff },
+                            set: { controller.setAutomaticPowerOff($0) }
+                        )) {
+                            ForEach(AutomaticPowerOffMode.allCases) { option in
+                                Text(option.label).tag(option)
+                            }
                         }
+                        .labelsHidden()
+                        .controlSize(.small)
+                        .fixedSize()
                     }
-                    .controlSize(.small)
                 } else {
                     pendingRow("Automatic Power Off")
                 }
