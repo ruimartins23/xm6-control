@@ -27,8 +27,10 @@
 | Menu bar quick controls | ✅ full control without opening the app |
 | Floating desktop widget | ✅ draggable, all-Spaces, remembers position |
 | Menu-bar-only mode | ✅ optional, hides the Dock icon; on by choice, not by default |
+| Light and dark appearance | ✅ every surface tone resolves per system appearance |
+| Adaptive layout | ✅ two columns in a wide window, one in a narrow one |
 
-The app is **event-driven**: 0% CPU at idle, no polling, negligible battery impact.
+The app is **event-driven**: 0% CPU at idle, no polling, negligible battery impact. Nothing animates continuously; motion is limited to feedback on your own input and to state changes.
 
 ## Requirements
 
