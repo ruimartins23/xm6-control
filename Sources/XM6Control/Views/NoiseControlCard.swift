@@ -5,7 +5,7 @@ struct NoiseControlCard: View {
     @EnvironmentObject private var controller: HeadphonesController
 
     private var effectiveState: AmbientSoundState? {
-        controller.ambientSound ?? (controller.initialStateTimedOut ? AmbientSoundState() : nil)
+        controller.ambientSound ?? (!controller.releaseWhenIdle && controller.initialStateTimedOut ? AmbientSoundState() : nil)
     }
 
     var body: some View {
@@ -53,19 +53,19 @@ struct NoiseControlCard: View {
 
                 Slider(
                     value: Binding(
-                        get: { Double(state.level) },
+                        get: { Double(max(1, state.level)) },
                         set: { newValue in
                             var updated = state
                             updated.level = Int(newValue.rounded())
                             controller.setAmbientSound(updated)
                         }
                     ),
-                    in: 0...20,
+                    in: 1...20,
                     step: 1
                 )
                 .accessibilityLabel("Ambient sound level")
 
-                Text("\(state.level)")
+                Text("\(max(1, state.level))")
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .frame(width: 18, alignment: .trailing)

@@ -32,6 +32,8 @@
 
 The app is **event-driven**: 0% CPU at idle, no polling, negligible battery impact. Nothing animates continuously; motion is limited to feedback on your own input and to state changes.
 
+**Release the headphones when I'm not using the app** is on by default. Opening the window, menu bar panel, or floating widget connects the controls; closing all three releases them after 20 seconds without a command, so Sony Sound Connect can use them again. A visible widget keeps the connection open. Uncheck the setting next to **Show only in the menu bar** to keep the connection open as before.
+
 ## Requirements
 
 - macOS 13+ (Liquid Glass styling on macOS 26+, graceful fallback below)
@@ -107,6 +109,8 @@ Enable **Debug logging** at the bottom of the main window to capture a hex trans
 |---|---|
 | "Couldn't find a paired WH-1000XM6" | Pair the headphones in System Settings → Bluetooth first |
 | Connect fails immediately | Make sure the headphones show as *Connected* (audio) in the Bluetooth menu, then Try Again |
+| Another device may be using the headphones | Close Sony Sound Connect on your phone, then Try Again. The headphones accept one control connection at a time |
+| Sony Sound Connect cannot connect while XM6 Control runs | Enable **Release the headphones when I'm not using the app**, close the window, menu bar panel, and widget, then wait 20 seconds. Audio stays connected |
 | Stuck on "Connecting…", or "macOS reported no Bluetooth services" | Disconnect and reconnect the headphones. See [below](#stuck-on-connecting-disconnect-and-reconnect) |
 | Bluetooth permission prompt after rebuild | Expected with ad-hoc signing. See the `XM6Dev` certificate setup above |
 | A card shows "state not reported" | That query wasn't answered; controls still work. Enable debug logging and open an issue with the log |

@@ -15,7 +15,11 @@ struct CompactControlsView: View {
             header
 
             if controller.connectionState == .connected {
-                ancRow
+                if controller.releaseWhenIdle && controller.ambientSound == nil {
+                    LoadingRow()
+                } else {
+                    ancRow
+                }
 
                 if (controller.ambientSound?.mode ?? .noiseCancelling) == .ambientSound {
                     ambientSlider
@@ -68,6 +72,11 @@ struct CompactControlsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .help("Hides the Dock icon. Uncheck to get the Dock icon and window back.")
+
+            Toggle("Release the headphones when I'm not using the app", isOn: $settings.releaseWhenIdle)
+                .toggleStyle(.checkbox)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -102,7 +111,7 @@ struct CompactControlsView: View {
             Image(systemName: "speaker.wave.1").font(.caption2).foregroundStyle(.secondary)
             Slider(
                 value: Binding(
-                    get: { Double(controller.ambientSound?.level ?? 15) },
+                    get: { Double(max(1, controller.ambientSound?.level ?? 15)) },
                     // Falls back to a default state rather than bailing out: when the
                     // headphones never reported ambient sound, the old `guard` left a
                     // slider that moved under the cursor and silently did nothing.
@@ -112,7 +121,7 @@ struct CompactControlsView: View {
                         controller.setAmbientSound(state)
                     }
                 ),
-                in: 0...20, step: 1
+                in: 1...20, step: 1
             )
             .controlSize(.mini)
             .accessibilityLabel("Ambient sound level")
@@ -210,7 +219,8 @@ struct CompactControlsView: View {
     private var promptText: String {
         switch controller.connectionState {
         case .connecting, .initializing: return "Connecting\u{2026}"
-        case .failed: return "Couldn't reach the headphones.\nMake sure they're on and paired."
+        case .failed: return controller.lastError ?? "Couldn't reach the headphones.\nMake sure they're on and paired."
+        case .disconnected where controller.releaseWhenIdle: return controller.lastError ?? "Not connected."
         default: return "Not connected."
         }
     }

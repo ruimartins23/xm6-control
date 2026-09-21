@@ -84,6 +84,10 @@ struct DashboardView: View {
                         .toggleStyle(.checkbox)
                         .help("Hides the Dock icon. The menu bar panel stays available, and you can reopen this window from there.")
 
+                    Toggle("Release the headphones when I'm not using the app", isOn: $settings.releaseWhenIdle)
+                        .toggleStyle(.checkbox)
+                        .help("Releases the control connection after all windows and panels have been closed for a short time.")
+
                     Toggle("Debug log", isOn: $controller.protocolLoggingEnabled)
                         .toggleStyle(.checkbox)
                         .help("Write a hex transcript of every frame to protocol.log")

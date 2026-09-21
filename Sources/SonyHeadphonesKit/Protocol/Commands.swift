@@ -3,10 +3,10 @@ import Foundation
 /// Builds request payloads and decodes reply/notify payloads for the six capabilities
 /// Gadgetbridge's `SonyWH1000XM6Coordinator` declares as supported on this model:
 /// battery (single), ambient sound control, speak-to-chat (enabled + config), automatic
-/// power off, and pause-when-taken-off. Every byte layout below was read directly out of
+/// power off, and pause-when-taken-off. The original byte layouts were read directly out of
 /// Gadgetbridge's `SonyProtocolImplV2.java` / `SonyProtocolImplV1.java` source (not
 /// reconstructed from documentation), specifically the codepaths reachable from the v2
-/// RFCOMM UUID that XM6 uses.
+/// RFCOMM UUID that XM6 uses. Ambient subtype 0x19 follows live XM6 firmware 3.0.0 captures.
 ///
 /// Deliberately out of scope: equalizer, touch sensor, DSEE/voice notifications. XM6's own
 /// coordinator marks these unimplemented/experimental ("probably not working"), so we don't
@@ -41,26 +41,33 @@ public enum SonyCommands {
         let ambientFlag: UInt8 = state.mode == .ambientSound ? 0x01 : 0x00
         var payload: [UInt8] = [
             Opcode.ambientSoundControlSet,
-            state.subtype,
+            state.subtype == 0x19 ? 0x17 : state.subtype,
             0x01, // fixed; the real app sends 0x00 mid-drag, 0x01 on commit
             onOff,
             ambientFlag
         ]
-        if state.hasWindNoiseByte {
+        if state.hasWindNoiseByte && state.subtype != 0x19 {
             payload.append(0x02) // 0x02 = normal NC/ambient, 0x03 = wind-noise-reduction (not exposed in UI)
         }
         payload.append(state.focusOnVoice ? 0x01 : 0x00)
-        payload.append(UInt8(clamping: state.level))
+        payload.append(UInt8(max(1, min(20, state.level))))
         return payload
     }
 
-    /// Accepts all three subtypes the reference implementation accepts (0x15 standard,
-    /// 0x17 ANC-2/wind-noise variant, 0x22 no-noise-cancelling variant) so we don't
-    /// silently drop the reply if XM6 firmware speaks a different dialect than assumed.
+    /// Accepts the older 0x15/0x17/0x22 layouts and XM6's nine-byte 0x19 reports:
+    /// [opcode, subtype, update, on, ambient, voice, level, unknown, unknown].
+    /// Voice shares the older layout's offset but was always zero in the captures.
     public static func decodeAmbientSound(_ payload: [UInt8]) -> AmbientSoundState? {
-        guard payload.count >= 6, payload.count <= 8 else { return nil }
+        guard payload.count >= 6 else { return nil }
         let subtype = payload[1]
-        guard subtype == 0x15 || subtype == 0x17 || subtype == 0x22 else { return nil }
+        switch subtype {
+        case 0x19:
+            guard payload.count == 9 else { return nil }
+        case 0x15, 0x17, 0x22:
+            guard payload.count <= 8 else { return nil }
+        default:
+            return nil
+        }
         let hasWindNoiseByte = subtype == 0x17 && payload.count > 7
 
         let mode: AmbientSoundMode
@@ -84,7 +91,7 @@ public enum SonyCommands {
             return nil
         }
 
-        let i = payload.count - 2
+        let i = subtype == 0x19 ? 5 : payload.count - 2
         guard let focusOnVoice = boolFromByte(payload[i]) else { return nil }
         let level = Int(payload[i + 1])
         guard (0...20).contains(level) else { return nil }
@@ -94,7 +101,9 @@ public enum SonyCommands {
             focusOnVoice: focusOnVoice,
             level: level,
             subtype: subtype,
-            hasWindNoiseByte: hasWindNoiseByte
+            hasWindNoiseByte: hasWindNoiseByte,
+            isUpdate: payload[2] != 0,
+            trailingBytes: subtype == 0x19 ? Array(payload.suffix(2)) : []
         )
     }
 

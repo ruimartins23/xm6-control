@@ -8,6 +8,13 @@ public enum RFCOMMConnectionEvent: Sendable {
     case failed(String)
 }
 
+protocol HeadphonesConnection: AnyObject {
+    var onEvent: ((RFCOMMConnectionEvent) -> Void)? { get set }
+    func connect(toDeviceAddress address: String)
+    func disconnect()
+    func write(_ bytes: [UInt8])
+}
+
 /// A short description of a paired classic-Bluetooth device, for UI display / manual
 /// device selection. Deliberately doesn't carry the `IOBluetoothDevice` itself so it can
 /// cross to SwiftUI without any Objective-C bridging concerns.
@@ -21,7 +28,7 @@ public struct PairedDeviceInfo: Identifiable, Equatable, Sendable {
 /// look up the vendor service UUID on the already-paired device, read back the RFCOMM
 /// channel ID from the SDP record, then open that channel directly. There is no fixed
 /// channel number -- it's assigned by the headset and must be discovered per-connection.
-public final class RFCOMMConnection: NSObject {
+public final class RFCOMMConnection: NSObject, HeadphonesConnection {
     public static let serviceUUIDv1 = "96CC203E-5068-46AD-B32D-E316F5E069BA"
     public static let serviceUUIDv2 = "956C7B26-D49A-4BA8-B03F-B17D393CB6E2"
 
@@ -31,6 +38,7 @@ public final class RFCOMMConnection: NSObject {
     private var channel: IOBluetoothRFCOMMChannel?
     /// Guards the one-shot retry when a channel open fails outright.
     private var didRetryChannelOpen = false
+    private var attemptID = UUID()
 
     public override init() {
         super.init()
@@ -64,7 +72,8 @@ public final class RFCOMMConnection: NSObject {
     // MARK: - Connect
 
     public func connect(toDeviceAddress address: String) {
-        DispatchQueue.main.async { [self] in
+        let open = { [self] in
+            attemptID = UUID()
             guard let device = Self.device(forAddress: address) else {
                 onEvent?(.failed("Could not resolve Bluetooth address \(address)"))
                 return
@@ -82,10 +91,16 @@ public final class RFCOMMConnection: NSObject {
                 // else: wait for connectionComplete(_:status:) delegate callback
             }
         }
+        if Thread.isMainThread {
+            open()
+        } else {
+            DispatchQueue.main.async(execute: open)
+        }
     }
 
     public func disconnect() {
-        DispatchQueue.main.async { [self] in
+        let close = { [self] in
+            attemptID = UUID()
             // Detach before closing: `close()` is asynchronous, and a channel still tearing
             // down would otherwise fire `rfcommChannelClosed` after the next connect has
             // begun, knocking the fresh session straight back to "disconnected".
@@ -94,10 +109,16 @@ public final class RFCOMMConnection: NSObject {
             channel = nil
             device = nil
         }
+        // Termination must close the channel before the main run loop stops.
+        if Thread.isMainThread {
+            close()
+        } else {
+            DispatchQueue.main.sync(execute: close)
+        }
     }
 
     public func write(_ bytes: [UInt8]) {
-        DispatchQueue.main.async { [self] in
+        let write = { [self] in
             guard let channel else {
                 onEvent?(.failed("Tried to write with no open channel"))
                 return
@@ -110,6 +131,11 @@ public final class RFCOMMConnection: NSObject {
             if result != kIOReturnSuccess {
                 onEvent?(.failed("Write failed (code \(result))"))
             }
+        }
+        if Thread.isMainThread {
+            write()
+        } else {
+            DispatchQueue.main.async(execute: write)
         }
     }
 
@@ -152,12 +178,13 @@ public final class RFCOMMConnection: NSObject {
             // The headset serves one control channel at a time; just after a reconnect the
             // previous one can still be tearing down. Worth one more try before giving up.
             guard !didRetryChannelOpen else {
-                onEvent?(.failed("Failed to open RFCOMM channel (code \(openStatus))"))
+                onEvent?(.failed(Self.channelOpenError(openStatus)))
                 return
             }
             didRetryChannelOpen = true
+            let attempt = attemptID
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-                guard let self, self.device === device else { return }
+                guard let self, self.attemptID == attempt, self.device === device else { return }
                 self.openChannel(device: device, record: record)
             }
             return
@@ -171,6 +198,10 @@ public final class RFCOMMConnection: NSObject {
         return withUnsafeBytes(of: &bytes) { raw in
             IOBluetoothSDPUUID(bytes: raw.baseAddress, length: raw.count)
         }
+    }
+
+    static func channelOpenError(_ status: IOReturn) -> String {
+        "Couldn't open the headphone controls (code \(status)). Another device may be using the headphones. Close Sony Sound Connect on your phone, then try again."
     }
 }
 
@@ -213,13 +244,14 @@ extension RFCOMMConnection: IOBluetoothRFCOMMChannelDelegate {
     public func rfcommChannelOpenComplete(_ rfcommChannel: IOBluetoothRFCOMMChannel!, status error: IOReturn) {
         guard rfcommChannel === channel else { return } // stale channel from an old attempt
         guard error == kIOReturnSuccess else {
-            onEvent?(.failed("RFCOMM channel failed to open (code \(error))"))
+            onEvent?(.failed(Self.channelOpenError(error)))
             return
         }
         // Opening the ACL/RFCOMM link too fast after pairing/wake can cause the very
         // first write to be silently dropped by the headset; give it a moment.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.onEvent?(.opened)
+            guard let self, rfcommChannel === self.channel else { return }
+            self.onEvent?(.opened)
         }
     }
 

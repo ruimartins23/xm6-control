@@ -37,6 +37,11 @@ let package = Package(
                     "-Xlinker", "Sources/XM6Probe/Info.plist"
                 ])
             ]
+        ),
+        .testTarget(
+            name: "SonyHeadphonesKitTests",
+            dependencies: ["SonyHeadphonesKit"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
         )
     ]
 )

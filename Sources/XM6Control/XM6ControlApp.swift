@@ -4,11 +4,14 @@ import SonyHeadphonesKit
 
 @main
 struct XM6ControlApp: App {
-    @StateObject private var controller = HeadphonesController()
-    @StateObject private var settings = AppSettings()
+    @StateObject private var controller: HeadphonesController
+    @StateObject private var settings: AppSettings
 
     init() {
         ProbeMode.runIfRequested()
+        let controller = HeadphonesController()
+        _controller = StateObject(wrappedValue: controller)
+        _settings = StateObject(wrappedValue: AppSettings(controller: controller))
     }
 
     var body: some Scene {
@@ -17,6 +20,7 @@ struct XM6ControlApp: App {
                 .environmentObject(controller)
                 .environmentObject(settings)
                 .frame(minWidth: 380, idealWidth: 420, minHeight: 560, idealHeight: 680)
+                .background(ControlSurfaceObserver(controller: controller, hideInitialWindow: settings.shouldHideInitialWindow))
                 .onAppear {
                     // The stored preference has to be pushed onto NSApp once the app is
                     // actually up; the bundle always launches as a regular app so that
@@ -41,6 +45,7 @@ struct XM6ControlApp: App {
             CompactControlsView()
                 .environmentObject(controller)
                 .environmentObject(settings)
+                .background(ControlSurfaceObserver(controller: controller))
         } label: {
             MenuBarIcon()
         }
@@ -51,6 +56,7 @@ struct XM6ControlApp: App {
             DesktopWidgetView()
                 .environmentObject(controller)
                 .environmentObject(settings)
+                .background(ControlSurfaceObserver(controller: controller))
         }
         .windowResizability(.contentSize)
         .defaultPosition(.topTrailing)

@@ -1,5 +1,7 @@
 import SwiftUI
 import AppKit
+import Combine
+import SonyHeadphonesKit
 
 /// App-level preferences, as opposed to headphone settings.
 ///
@@ -10,6 +12,18 @@ import AppKit
 @MainActor
 final class AppSettings: ObservableObject {
     private static let menuBarOnlyKey = "menuBarOnly"
+    private static let releaseWhenIdleKey = "releaseHeadphonesWhenIdle"
+    private let controller: HeadphonesController
+    private var configuredInitialWindow = false
+    private var terminationObserver: AnyCancellable?
+
+    @Published var releaseWhenIdle: Bool {
+        didSet {
+            guard oldValue != releaseWhenIdle else { return }
+            UserDefaults.standard.set(releaseWhenIdle, forKey: Self.releaseWhenIdleKey)
+            controller.releaseWhenIdle = releaseWhenIdle
+        }
+    }
 
     /// `true` runs as a menu bar accessory: no Dock icon, no app-switcher entry, the
     /// menu bar panel is the whole interface. `false` is a normal Mac app.
@@ -21,8 +35,13 @@ final class AppSettings: ObservableObject {
         }
     }
 
-    init() {
+    init(controller: HeadphonesController) {
+        self.controller = controller
+        releaseWhenIdle = UserDefaults.standard.object(forKey: Self.releaseWhenIdleKey) as? Bool ?? true
         menuBarOnly = UserDefaults.standard.bool(forKey: Self.menuBarOnlyKey)
+        controller.releaseWhenIdle = releaseWhenIdle
+        terminationObserver = NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
+            .sink { [weak controller] _ in controller?.disconnect() }
     }
 
     /// Pushes the current preference onto `NSApp`. Call once at launch, and it runs
@@ -37,5 +56,11 @@ final class AppSettings: ObservableObject {
         if !menuBarOnly && openWindowIfNeeded {
             NSApp.activate(ignoringOtherApps: true)
         }
+    }
+
+    func shouldHideInitialWindow() -> Bool {
+        guard !configuredInitialWindow else { return false }
+        configuredInitialWindow = true
+        return releaseWhenIdle && menuBarOnly
     }
 }

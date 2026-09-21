@@ -23,7 +23,7 @@ struct DisconnectedView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, 24)
                 } else {
-                    Text("Looking for your WH-1000XM6\u{2026}")
+                    Text("Use Try Again to connect to your WH-1000XM6.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
