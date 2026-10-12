@@ -58,6 +58,7 @@ public enum SonyCommands {
     /// 0x17 ANC-2/wind-noise variant, 0x22 no-noise-cancelling variant) so we don't
     /// silently drop the reply if XM6 firmware speaks a different dialect than assumed.
     public static func decodeAmbientSound(_ payload: [UInt8]) -> AmbientSoundState? {
+        if let state = decodeAmbientSoundXM6Notify(payload) { return state }
         guard payload.count >= 6, payload.count <= 8 else { return nil }
         let subtype = payload[1]
         guard subtype == 0x15 || subtype == 0x17 || subtype == 0x22 else { return nil }
@@ -95,6 +96,32 @@ public enum SonyCommands {
             level: level,
             subtype: subtype,
             hasWindNoiseByte: hasWindNoiseByte
+        )
+    }
+
+    /// The XM6 reports changes made on the headphones themselves (the NC/AMB button)
+    /// with subtype 0x19 and a 9-byte payload the older decoders reject:
+    ///   [0x69, 0x19, 0x01, onOff, ambientFlag, focusOnVoice, level, 0x00, 0x00]
+    /// Captured from a live XM6 while cycling the button. It still accepts writes in
+    /// the 0x17 layout, so the decoded state keeps 0x17 for the next write.
+    private static func decodeAmbientSoundXM6Notify(_ payload: [UInt8]) -> AmbientSoundState? {
+        guard payload.count == 9, payload[1] == 0x19 else { return nil }
+        let mode: AmbientSoundMode
+        switch (payload[3], payload[4]) {
+        case (0x00, _): mode = .off
+        case (0x01, 0x00): mode = .noiseCancelling
+        case (0x01, 0x01): mode = .ambientSound
+        default: return nil
+        }
+        guard let focusOnVoice = boolFromByte(payload[5]) else { return nil }
+        let level = Int(payload[6])
+        guard (0...20).contains(level) else { return nil }
+        return AmbientSoundState(
+            mode: mode,
+            focusOnVoice: focusOnVoice,
+            level: level,
+            subtype: 0x17,
+            hasWindNoiseByte: false
         )
     }
 

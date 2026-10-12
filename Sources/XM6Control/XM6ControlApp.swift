@@ -4,19 +4,29 @@ import SonyHeadphonesKit
 
 @main
 struct XM6ControlApp: App {
-    @StateObject private var controller = HeadphonesController()
+    @StateObject private var controller: HeadphonesController
     @StateObject private var settings = AppSettings()
+    private let widgetBridge: WidgetBridge
 
     init() {
+        let controller = HeadphonesController()
+        _controller = StateObject(wrappedValue: controller)
+        widgetBridge = WidgetBridge(controller: controller)
+
+        // `--demo` fills in a connected state without Bluetooth, for working on the
+        // interface away from the headphones.
+        if CommandLine.arguments.contains("--demo") {
+            controller.loadDemoState()
+        }
         ProbeMode.runIfRequested()
     }
 
     var body: some Scene {
-        WindowGroup(id: "main") {
+        WindowGroup("XM6 Control", id: "main") {
             ContentView()
                 .environmentObject(controller)
                 .environmentObject(settings)
-                .frame(minWidth: 380, idealWidth: 420, minHeight: 560, idealHeight: 680)
+                .frame(minWidth: 420, idealWidth: 460, maxWidth: 640, minHeight: 520, idealHeight: 760)
                 .onAppear {
                     // The stored preference has to be pushed onto NSApp once the app is
                     // actually up; the bundle always launches as a regular app so that
@@ -27,9 +37,13 @@ struct XM6ControlApp: App {
                     } else {
                         settings.apply()
                     }
+                    if CommandLine.arguments.contains("--dark") {
+                        NSApp.appearance = NSAppearance(named: .darkAqua)
+                    }
                 }
         }
         .windowResizability(.contentSize)
+        .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(replacing: .newItem) {}
         }
@@ -46,13 +60,10 @@ struct XM6ControlApp: App {
         }
         .menuBarExtraStyle(.window)
 
-        // Floating desktop widget, opened from the main window or the menu bar panel.
-        Window("XM6 Widget", id: "desktop-widget") {
-            DesktopWidgetView()
+        Settings {
+            SettingsView()
                 .environmentObject(controller)
                 .environmentObject(settings)
         }
-        .windowResizability(.contentSize)
-        .defaultPosition(.topTrailing)
     }
 }

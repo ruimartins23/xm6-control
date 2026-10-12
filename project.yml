@@ -1,0 +1,65 @@
+name: XM6Control
+options:
+  bundleIdPrefix: com.local
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+packages:
+  XM6Kit:
+    path: .
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+    MARKETING_VERSION: "2.0"
+    CURRENT_PROJECT_VERSION: "15"
+targets:
+  XM6ControlApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/XM6Control
+        excludes: ["Resources/Info.plist", "Resources/AppIcon.icns"]
+      - path: Sources/XM6Control/Resources/AppIcon.icns
+        buildPhase: resources
+        optional: true
+    dependencies:
+      - package: XM6Kit
+        product: SonyHeadphonesKit
+      - package: XM6Kit
+        product: XM6Shared
+      - target: XM6Widget
+        embed: true
+    settings:
+      base:
+        PRODUCT_NAME: "XM6 Control"
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.xm6control
+        INFOPLIST_FILE: Sources/XM6Control/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+  XM6Widget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - Sources/XM6Widget
+      - path: Sources/XM6Control/Resources/headphones.png
+        buildPhase: resources
+    dependencies:
+      - package: XM6Kit
+        product: XM6Shared
+    info:
+      path: Config/XM6Widget-Info.plist
+      properties:
+        CFBundleDisplayName: XM6 Control
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_NAME: XM6Widget
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.xm6control.widget
+        CODE_SIGN_ENTITLEMENTS: Config/XM6Widget.entitlements
+        SKIP_INSTALL: YES

@@ -7,21 +7,6 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // A shallow vertical gradient rather than a flat fill: it gives the cards
-            // something to sit against, so they read as layers instead of rectangles
-            // on the same plane. Deliberately only a few percent, and nothing like
-            // the large blurred colour circles this replaced, which read as generic
-            // app decoration rather than as part of a Mac app.
-            LinearGradient(
-                colors: [
-                    Color(nsColor: .windowBackgroundColor),
-                    Color(nsColor: .underPageBackgroundColor),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-
             Group {
                 switch controller.connectionState {
                 case .disconnected, .failed, .searching:

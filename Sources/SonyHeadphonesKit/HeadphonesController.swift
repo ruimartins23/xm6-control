@@ -36,6 +36,9 @@ public final class HeadphonesController: ObservableObject {
     /// seconds. The UI uses this to stop showing spinners and offer optimistic
     /// controls instead (writes still work even when the initial read was ignored).
     @Published public private(set) var initialStateTimedOut = false
+    /// The device list has its own flag: some XM6 units acknowledge the request but
+    /// never answer it, while every other setting arrives fine.
+    @Published public private(set) var deviceListTimedOut = false
 
     /// Persists across launches; when off, the protocol log does zero disk I/O.
     @Published public var protocolLoggingEnabled: Bool {
@@ -61,6 +64,8 @@ public final class HeadphonesController: ObservableObject {
     private var connectRetryCount = 0
     private var connectTarget: (address: String, name: String?)?
     private var didApplyConnectDefaults = false
+    private var isDemo = false
+    private var deviceListTimeoutTask: Task<Void, Never>?
 
     public init() {
         protocolLoggingEnabled = UserDefaults.standard.bool(forKey: "protocolLoggingEnabled")
@@ -261,6 +266,8 @@ public final class HeadphonesController: ObservableObject {
         initRetryCount = 0
         didApplyConnectDefaults = false
         initialStateTimedOut = false
+        deviceListTimedOut = false
+        deviceListTimeoutTask?.cancel()
         frameParser.reset()
         ambientSound = nil
         battery = nil
@@ -427,6 +434,23 @@ public final class HeadphonesController: ObservableObject {
                 self.initialStateTimedOut = true
             }
         }
+        startDeviceListTimeout()
+    }
+
+    private func startDeviceListTimeout() {
+        deviceListTimeoutTask?.cancel()
+        deviceListTimeoutTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 6_000_000_000)
+            guard let self, !Task.isCancelled else { return }
+            if self.devices == nil { self.deviceListTimedOut = true }
+        }
+    }
+
+    /// Asks for the device list again after it timed out.
+    public func refreshDeviceList() {
+        deviceListTimedOut = false
+        enqueue(SonyCommands.buildDeviceListGet(), type: .command2)
+        startDeviceListTimeout()
     }
 
     private func requestFullState() {
@@ -450,6 +474,7 @@ public final class HeadphonesController: ObservableObject {
     // MARK: - Outbound queue
 
     private func enqueue(_ payload: [UInt8], type: SonyMessageType = .command1) {
+        guard !isDemo else { return }
         outgoingQueue.append((type, payload))
         if !awaitingAck {
             sendNextQueuedCommand()
@@ -476,5 +501,32 @@ public final class HeadphonesController: ObservableObject {
         // since it won't match the (by-then-advanced) expected sequence number.
         awaitingAck = false
         sendNextQueuedCommand()
+    }
+}
+
+// MARK: - Demo
+
+extension HeadphonesController {
+    /// Fills in a plausible connected state with no Bluetooth at all, so the interface
+    /// can be built and screenshotted without the headphones. Setters keep working
+    /// optimistically; nothing is sent.
+    public func loadDemoState() {
+        isDemo = true
+        deviceName = "WH-1000XM6"
+        protocolVersion = .v2
+        ambientSound = AmbientSoundState(mode: .noiseCancelling, level: 14)
+        battery = BatteryStatus(level: 72, isCharging: false)
+        speakToChatEnabled = false
+        speakToChatConfig = SpeakToChatConfigState(sensitivity: .auto, timeout: .standard)
+        automaticPowerOff = .off
+        pauseWhenTakenOff = true
+        equalizer = EqualizerState(presetCode: EqualizerPreset.custom.rawValue, bands: [0, 2, 3, 1, 0, -1, 0, 2, 3, 4])
+        listeningMode = .standard
+        bgmRoomSize = .middle
+        devices = [
+            MultipointDevice(macAddress: "00:00:00:00:00:01", name: "MacBook Pro", connectedStatus: 1, isPlayback: true),
+            MultipointDevice(macAddress: "00:00:00:00:00:02", name: "iPhone 17 Pro", connectedStatus: 1, isPlayback: false),
+        ]
+        connectionState = .connected
     }
 }

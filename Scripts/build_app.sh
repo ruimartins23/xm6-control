@@ -1,28 +1,28 @@
 #!/bin/bash
-# Builds XM6Control and packages it into a double-clickable .app bundle.
-# No Xcode required -- this only needs the Swift toolchain (Command Line Tools).
+# Builds "XM6 Control.app" with its WidgetKit extension embedded.
 #
-# Code signing: if a signing identity named "XM6Dev" exists in the keychain
-# (self-signed code-signing certificate created via Keychain Access), the app is
-# signed with it so macOS keeps the Bluetooth permission grant across rebuilds.
-# Otherwise it falls back to ad-hoc signing, which re-prompts after every rebuild.
+# Needs full Xcode: a widget extension is an .appex bundle with App Intents metadata,
+# which only xcodebuild produces. `swift build` still builds the app alone (no widget)
+# with just the Command Line Tools.
+#
+# Code signing: Xcode refuses to sign the extension's entitlements without a development
+# team, so xcodebuild runs unsigned and the bundle is signed here instead. If a
+# signing identity named "XM6Dev" exists (self-signed code-signing certificate from
+# Keychain Access) it is used, so macOS keeps the Bluetooth grant across rebuilds;
+# otherwise the bundle is signed ad hoc.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-CONFIG="${1:-release}"
+CONFIG="${1:-Release}"
 APP_NAME="XM6 Control"
-BUNDLE_ID="com.local.xm6control"
-BUILD_DIR=".build/${CONFIG}"
+DERIVED=".build/xcode"
 APP_DIR=".build/${APP_NAME}.app"
+APPEX="${APP_DIR}/Contents/PlugIns/XM6Widget.appex"
 SIGN_IDENTITY="XM6Dev"
 
-echo "==> Building (${CONFIG})..."
-swift build -c "${CONFIG}"
-
-# App icon. The hero photo is the canonical artwork when it is present, so the Dock
-# icon matches the headphones the app controls; the generated vector artwork is the
-# fallback for a checkout without a photo.
+# App icon. The hero photo is the canonical artwork when present, so the Dock icon
+# matches the headphones the app controls; vector artwork is the fallback.
 ICON_SRC="Sources/XM6Control/Resources/headphones.png"
 ICON_OUT="Sources/XM6Control/Resources/AppIcon.icns"
 if [ -f "${ICON_SRC}" ]; then
@@ -36,29 +36,34 @@ elif [ ! -f "${ICON_OUT}" ]; then
     swift Scripts/make_icon.swift
 fi
 
-echo "==> Assembling ${APP_NAME}.app..."
-rm -rf "${APP_DIR}"
-mkdir -p "${APP_DIR}/Contents/MacOS"
-mkdir -p "${APP_DIR}/Contents/Resources"
-
-cp "${BUILD_DIR}/XM6Control" "${APP_DIR}/Contents/MacOS/XM6Control"
-cp "Sources/XM6Control/Resources/Info.plist" "${APP_DIR}/Contents/Info.plist"
-cp "Sources/XM6Control/Resources/AppIcon.icns" "${APP_DIR}/Contents/Resources/AppIcon.icns"
-
-# Optional hero photo: drop your own headphones.png into Resources and it appears in-app.
-if [ -f "Sources/XM6Control/Resources/headphones.png" ]; then
-    cp "Sources/XM6Control/Resources/headphones.png" "${APP_DIR}/Contents/Resources/headphones.png"
+if command -v xcodegen >/dev/null; then
+    xcodegen generate --quiet
 fi
+
+echo "==> Building (${CONFIG})..."
+xcodebuild -quiet \
+    -project XM6Control.xcodeproj \
+    -scheme XM6ControlApp \
+    -configuration "${CONFIG}" \
+    -derivedDataPath "${DERIVED}" \
+    CODE_SIGNING_ALLOWED=NO \
+    build
+
+rm -rf "${APP_DIR}"
+cp -R "${DERIVED}/Build/Products/${CONFIG}/${APP_NAME}.app" "${APP_DIR}"
 
 # No -v flag: self-signed certs report CSSMERR_TP_NOT_TRUSTED (filtered by -v)
 # yet still sign successfully.
 if security find-identity -p codesigning 2>/dev/null | grep -q "\"${SIGN_IDENTITY}\""; then
+    IDENTITY="${SIGN_IDENTITY}"
     echo "==> Signing with ${SIGN_IDENTITY} (stable identity, no permission re-prompts)..."
-    codesign --force --deep --sign "${SIGN_IDENTITY}" "${APP_DIR}"
 else
-    echo "==> Ad-hoc code signing (create an '${SIGN_IDENTITY}' certificate to avoid permission re-prompts)..."
-    codesign --force --deep --sign - "${APP_DIR}"
+    IDENTITY="-"
+    echo "==> Ad-hoc signing (create an '${SIGN_IDENTITY}' certificate to avoid permission re-prompts)..."
 fi
+# Inside out: the extension first, then the app that seals it.
+codesign --force --sign "${IDENTITY}" --entitlements Config/XM6Widget.entitlements "${APPEX}"
+codesign --force --sign "${IDENTITY}" "${APP_DIR}"
 
 echo "==> Done: ${APP_DIR}"
-echo "    Launch with: open \"${APP_DIR}\""
+echo "    Install with: ditto \"${APP_DIR}\" \"/Applications/${APP_NAME}.app\""

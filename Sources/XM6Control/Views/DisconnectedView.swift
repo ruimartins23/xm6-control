@@ -35,7 +35,7 @@ struct DisconnectedView: View {
                 Label("Try Again", systemImage: "arrow.clockwise")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
             .controlSize(.large)
             .padding(.horizontal, 40)
 
@@ -71,7 +71,7 @@ struct DisconnectedView: View {
                             }
                         }
                     }
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Radius.card))
+                    .glassEffect(.regular, in: .rect(cornerRadius: 16))
                     .padding(.horizontal, 24)
                 }
             }

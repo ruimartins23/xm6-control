@@ -2,7 +2,7 @@
 
 **A native macOS app for the Sony WH-1000XM6.** Control noise cancelling, ambient sound, equalizer, listening modes, and multipoint directly from your Mac. No Sony app required, no Electron, no cloud: just Swift, SwiftUI, and a direct Bluetooth connection to your headphones.
 
-> Sony ships its Sound Connect companion app for iOS and Android, but not for macOS. This project fills that gap with a first-class Mac experience: a Liquid Glass interface, a menu bar panel, and a floating desktop widget, all speaking Sony's native headphone protocol over Bluetooth RFCOMM.
+> Sony ships its Sound Connect companion app for iOS and Android, but not for macOS. This project fills that gap with a first-class Mac experience: a Liquid Glass interface, a menu bar panel, and a WidgetKit widget for the desktop and Notification Center, all speaking Sony's native headphone protocol over Bluetooth RFCOMM.
 
 <p align="center">
   <img src="docs/screenshot.png" alt="XM6 Control dashboard showing ambient sound control, listening mode, equalizer, speak-to-chat and wearing detection" width="450">
@@ -25,7 +25,7 @@
 | Wearing detection (pause when taken off) | ✅ |
 | Automatic power off | ✅ |
 | Menu bar quick controls | ✅ full control without opening the app |
-| Floating desktop widget | ✅ draggable, all-Spaces, remembers position |
+| Desktop & Notification Center widget | ✅ WidgetKit, small, medium and large: battery, noise control, listening mode and equalizer |
 | Menu-bar-only mode | ✅ optional, hides the Dock icon; on by choice, not by default |
 | Light and dark appearance | ✅ every surface tone resolves per system appearance |
 | Adaptive layout | ✅ two columns in a wide window, one in a narrow one |
@@ -34,8 +34,8 @@ The app is **event-driven**: 0% CPU at idle, no polling, negligible battery impa
 
 ## Requirements
 
-- macOS 13+ (Liquid Glass styling on macOS 26+, graceful fallback below)
-- Xcode Command Line Tools (`xcode-select --install`). Full Xcode is not required
+- macOS 26+ (built and tested on macOS 27)
+- Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`). A widget extension can only be built by `xcodebuild`. With just the Command Line Tools, `swift build` still builds the app without the widget
 - A Sony WH-1000XM6 paired in **System Settings → Bluetooth**
 
 ## Build & Run
@@ -47,15 +47,31 @@ cd xm6-control
 open ".build/XM6 Control.app"
 ```
 
-That's it. The script builds with SwiftPM, packages a double-clickable `.app`, generates the app icon, and signs the bundle. Drag `XM6 Control.app` to `/Applications` if you want it permanent, and add it to **System Settings → General → Login Items** to start it at login.
+That's it. The script generates the Xcode project, builds the app with its widget extension, generates the app icon, and signs the bundle. Drag `XM6 Control.app` to `/Applications` if you want it permanent, and turn on **Open at login** in Settings (⌘,) to start it when you log in.
 
 On first launch macOS asks for Bluetooth permission. Click **Allow**. Make sure the headphones are powered on and connected as an audio device before hitting **Try Again** if the first connection races.
 
 ### Window or menu bar
 
+<p align="center">
+  <img src="docs/menu-bar.png" alt="The menu bar panel with noise control, listening mode and equalizer" width="330">
+</p>
+
 By default XM6 Control behaves like a normal Mac app: a Dock icon, and a window when you open it. The menu bar panel is always there too, so quick changes never need the window.
 
-If you would rather it stay out of the way entirely, tick **Show only in the menu bar** at the bottom of the window. That drops the Dock icon and the app-switcher entry, and the menu bar panel becomes the whole interface. The same checkbox lives in that panel, so unticking it brings the window and Dock icon back.
+If you would rather it stay out of the way entirely, turn on **Show only in the menu bar** in Settings (⌘,). That drops the Dock icon and the app-switcher entry, and the menu bar panel becomes the whole interface. The panel's gear button opens the same Settings window, so turning it off brings the window and Dock icon back.
+
+### Widget
+
+<p align="center">
+  <img src="docs/widgets.png" alt="Small, medium and large XM6 widgets on the desktop" width="720">
+</p>
+
+Right-click the desktop (or open Notification Center) and choose **Edit Widgets**, then pick **XM6 Control**. The small widget shows battery and the noise mode with three buttons. The medium one adds the product shot and a listening mode switch. The large one adds the equalizer presets.
+
+The widget runs in its own sandbox and can't hold the Bluetooth connection, so the app has to be running: it writes the current state to `~/Library/Application Support/XM6 Control/Widget/`, and the widget's buttons drop a command there that the app carries out. An app-group container would be the usual channel, but macOS keeps an ad-hoc-signed app out of one, so this needs no paid developer account.
+
+To work on the interface without the headphones, launch with `--demo`: it fills in a connected state and sends nothing over Bluetooth. Add `--dark` to force the dark appearance.
 
 ### Avoiding permission re-prompts across rebuilds
 
@@ -75,7 +91,7 @@ The menu bar icon is drawn rather than taken from the photo. A menu bar image ha
 
 ## Architecture
 
-Two SwiftPM targets, cleanly separated:
+The library, the app and the widget are separate targets:
 
 ```
 Sources/
@@ -90,16 +106,19 @@ Sources/
 │   ├── RFCOMMConnection.swift  #   IOBluetooth RFCOMM channel management
 │   ├── HeadphonesController.swift # Session orchestration, ACK/sequence, state
 │   └── ProtocolLog.swift       #   Optional hex-dump debug log
-└── XM6Control/                 # SwiftUI app
-    ├── XM6ControlApp.swift     #   Main window + menu bar extra + desktop widget
-    └── Views/                  #   Dashboard cards, compact controls, widget
+├── XM6Shared/                  # State and commands shared by the app and the widget
+├── XM6Control/                 # SwiftUI app
+│   ├── XM6ControlApp.swift     #   Main window + menu bar extra + Settings
+│   ├── WidgetBridge.swift      #   Publishes state to the widget, runs its commands
+│   └── Views/                  #   Dashboard sections, menu bar panel, Settings
+└── XM6Widget/                  # WidgetKit extension (built by xcodebuild via project.yml)
 ```
 
 ### Protocol notes
 
 The XM6 speaks Sony's proprietary MDR protocol over RFCOMM (service UUID `96CC203E-5068-46ad-B32D-E316F5E069BA`): framed messages with an alternating sequence bit, per-frame ACKs, and two independent opcode tables. The XM6 generation moved several features to new command families relative to older 1000X models: the equalizer answers a different inquired type, wearing detection moved to the SYSTEM family, and multipoint management lives on the second message table. All command layouts used here were verified against a live WH-1000XM6 (firmware 3.x) via the built-in protocol log.
 
-Enable **Debug logging** at the bottom of the main window to capture a hex transcript of every frame at `~/Library/Application Support/XM6 Control/protocol.log`. That transcript is what makes adding features or supporting new firmware practical.
+Turn on **Write protocol log** in Settings to capture a hex transcript of every frame at `~/Library/Application Support/XM6 Control/protocol.log`. That transcript is what makes adding features or supporting new firmware practical.
 
 ## Troubleshooting
 
@@ -109,9 +128,11 @@ Enable **Debug logging** at the bottom of the main window to capture a hex trans
 | Connect fails immediately | Make sure the headphones show as *Connected* (audio) in the Bluetooth menu, then Try Again |
 | Stuck on "Connecting…", or "macOS reported no Bluetooth services" | Disconnect and reconnect the headphones. See [below](#stuck-on-connecting-disconnect-and-reconnect) |
 | Bluetooth permission prompt after rebuild | Expected with ad-hoc signing. See the `XM6Dev` certificate setup above |
-| A card shows "state not reported" | That query wasn't answered; controls still work. Enable debug logging and open an issue with the log |
+| A section shows "not reported" or "Device list unavailable" | That query wasn't answered; the other controls still work. Turn on the protocol log in Settings and open an issue with the log |
 | Menu bar icon missing | The app may not be running. Launch it again |
-| No Dock icon and no window | "Show only in the menu bar" is enabled. Uncheck it from the menu bar panel to get the window and Dock icon back |
+| No Dock icon and no window | "Show only in the menu bar" is enabled. Turn it off in Settings (gear button in the menu bar panel) |
+| Widget says "Not Connected" | The app has to be running for the widget to work. Launch XM6 Control |
+| Widget shows an old layout | macOS caches widgets. Remove the widget and add it again |
 
 ### Stuck on "Connecting…": disconnect and reconnect
 

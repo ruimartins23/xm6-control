@@ -1,74 +1,34 @@
 import SwiftUI
 import SonyHeadphonesKit
 
-/// Compact control panel used by both the menu bar extra and the floating desktop
-/// widget: every frequently-used control in a small footprint.
+/// The menu bar panel: every frequently used control, laid out like a Control
+/// Center module.
 struct CompactControlsView: View {
     @EnvironmentObject private var controller: HeadphonesController
-    @EnvironmentObject private var settings: AppSettings
     @Environment(\.openWindow) private var openWindow
-    /// Extra chrome (drag hint + close) shown only in the desktop-widget window.
-    var isDesktopWidget = false
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             header
 
             if controller.connectionState == .connected {
-                ancRow
-
-                if (controller.ambientSound?.mode ?? .noiseCancelling) == .ambientSound {
-                    ambientSlider
-                }
-
+                noiseControl
                 Divider()
-                listeningModeRow
-                equalizerRow
-
+                soundControls
                 if let devices = controller.devices, devices.count > 1 {
                     Divider()
-                    devicesRow(devices)
+                    devicesList(devices)
                 }
             } else {
                 connectPrompt
             }
 
-            if !isDesktopWidget {
-                Divider()
-                appRow
-            }
+            Divider()
+            appRow
         }
-        .padding(14)
-        .frame(width: 300)
-    }
-
-    /// With the Dock icon hidden, this row is the only way to reopen the main
-    /// window or quit -- do not remove it from the menu bar panel.
-    private var appRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Button("Open App") {
-                    openWindow(id: "main")
-                    NSApp.activate(ignoringOtherApps: true)
-                }
-                Button("Widget") {
-                    openWindow(id: "desktop-widget")
-                }
-                Spacer()
-                Button("Quit") {
-                    NSApp.terminate(nil)
-                }
-            }
-            .controlSize(.small)
-
-            // Reachable from here on purpose: in menu-bar-only mode this panel is the
-            // only interface, so the way back to a normal window has to live in it.
-            Toggle("Show only in the menu bar", isOn: $settings.menuBarOnly)
-                .toggleStyle(.checkbox)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .help("Hides the Dock icon. Uncheck to get the Dock icon and window back.")
-        }
+        .padding(16)
+        .frame(width: 320)
     }
 
     // MARK: - Sections
@@ -77,80 +37,89 @@ struct CompactControlsView: View {
         HStack(spacing: 8) {
             // The same drawn glyph as the menu bar item, so the panel is visibly the
             // same app as the icon it dropped out of.
-            Image(nsImage: .xm6MenuBarIcon(size: 15))
-                .foregroundStyle(Color.brand)
+            Image(nsImage: .xm6MenuBarIcon(size: 16))
+                .foregroundStyle(Color.accentColor)
             Text(controller.deviceName ?? "WH-1000XM6")
-                .font(.callout.weight(.semibold))
+                .font(.headline)
                 .lineLimit(1)
             Spacer()
             if let battery = controller.battery {
-                BatteryGauge(level: battery.level, isCharging: battery.isCharging)
+                BatteryLabel(level: battery.level, isCharging: battery.isCharging)
+                    .font(.callout)
             }
         }
     }
 
-    private var ancRow: some View {
-        HStack(spacing: 6) {
-            compactModeButton("NC", spoken: "Noise Canceling", icon: "person.wave.2.fill", mode: .noiseCancelling)
-            compactModeButton("Ambient", spoken: "Ambient Sound", icon: "waveform.and.person.filled", mode: .ambientSound)
-            compactModeButton("Off", spoken: "Off", icon: "xmark", mode: .off)
+    @ViewBuilder
+    private var noiseControl: some View {
+        let state = controller.ambientSound ?? AmbientSoundState()
+
+        ModeSelector(
+            options: [
+                .init(value: .noiseCancelling, title: "Noise Canceling", icon: "person.wave.2.fill"),
+                .init(value: .ambientSound, title: "Ambient", icon: "waveform.and.person.filled"),
+                .init(value: .off, title: "Off", icon: "xmark"),
+            ],
+            selection: controller.ambientSound?.mode ?? .noiseCancelling,
+            select: { mode in
+                var updated = state
+                updated.mode = mode
+                controller.setAmbientSound(updated)
+            },
+            diameter: 44
+        )
+
+        if state.mode == .ambientSound {
+            HStack(spacing: 8) {
+                Image(systemName: "speaker.wave.1").foregroundStyle(.secondary)
+                Slider(
+                    value: Binding(
+                        get: { Double(state.level) },
+                        set: { newValue in
+                            var updated = state
+                            updated.level = Int(newValue.rounded())
+                            controller.setAmbientSound(updated)
+                        }
+                    ),
+                    in: 0...20, step: 1
+                )
+                .accessibilityLabel("Ambient sound level")
+                Image(systemName: "speaker.wave.3").foregroundStyle(.secondary)
+            }
+            .font(.caption)
         }
     }
 
-    private var ambientSlider: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "speaker.wave.1").font(.caption2).foregroundStyle(.secondary)
-            Slider(
-                value: Binding(
-                    get: { Double(controller.ambientSound?.level ?? 15) },
-                    // Falls back to a default state rather than bailing out: when the
-                    // headphones never reported ambient sound, the old `guard` left a
-                    // slider that moved under the cursor and silently did nothing.
-                    set: { newValue in
-                        var state = controller.ambientSound ?? AmbientSoundState(mode: .ambientSound)
-                        state.level = Int(newValue.rounded())
-                        controller.setAmbientSound(state)
+    private var soundControls: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Picker("Listening mode", selection: Binding(
+                get: { controller.listeningMode ?? .standard },
+                set: { controller.setListeningMode($0) }
+            )) {
+                Text("Standard").tag(ListeningMode.standard)
+                Text("BGM").tag(ListeningMode.backgroundMusic)
+                Text("Cinema").tag(ListeningMode.cinema)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            // A segmented picker keeps its intrinsic width on macOS and sits at the
+            // leading edge; centre it under the noise buttons.
+            .frame(maxWidth: .infinity)
+
+            HStack {
+                Text("Equalizer")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                // A Menu rather than a Picker so the current value can be a label the
+                // enum doesn't contain: the device can report a personalized preset.
+                Menu(currentEqualizerLabel) {
+                    ForEach(EqualizerPreset.allCases) { preset in
+                        Button(preset.label) { controller.setEqualizerPreset(preset) }
                     }
-                ),
-                in: 0...20, step: 1
-            )
-            .controlSize(.mini)
-            .accessibilityLabel("Ambient sound level")
-            Image(systemName: "speaker.wave.3").font(.caption2).foregroundStyle(.secondary)
-        }
-    }
-
-    private var listeningModeRow: some View {
-        Picker("Mode", selection: Binding(
-            get: { controller.listeningMode ?? .standard },
-            set: { controller.setListeningMode($0) }
-        )) {
-            Text("Standard").tag(ListeningMode.standard)
-            Text("BGM").tag(ListeningMode.backgroundMusic)
-            Text("Cinema").tag(ListeningMode.cinema)
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-    }
-
-    private var equalizerRow: some View {
-        HStack {
-            Text("Equalizer")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Spacer()
-            // A Menu rather than a Picker so the current value can be a label the
-            // enum doesn't contain. The device can report a personalized preset id,
-            // and a Picker forced that through `?? .off`, showing "Off" while the
-            // headphones were using something else entirely.
-            Menu(currentEqualizerLabel) {
-                ForEach(EqualizerPreset.allCases) { preset in
-                    Button(preset.label) { controller.setEqualizerPreset(preset) }
                 }
+                .fixedSize()
+                .accessibilityLabel("Equalizer preset, \(currentEqualizerLabel)")
             }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-            .accessibilityLabel("Equalizer preset, \(currentEqualizerLabel)")
         }
     }
 
@@ -159,50 +128,41 @@ struct CompactControlsView: View {
         return equalizer.preset?.label ?? "Personalized"
     }
 
-    private func devicesRow(_ devices: [MultipointDevice]) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private func devicesList(_ devices: [MultipointDevice]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
             ForEach(devices) { device in
-                Button {
-                    if device.isConnected && !device.isPlayback {
-                        controller.switchPlayback(to: device)
+                HStack(spacing: 8) {
+                    Image(systemName: symbolForDevice(named: device.name))
+                        .frame(width: 18)
+                        .foregroundStyle(device.isPlayback ? Color.accentColor : Color.secondary)
+                    Text(device.name)
+                        .lineLimit(1)
+                        .foregroundStyle(device.isConnected ? .primary : .secondary)
+                    Spacer()
+                    if device.isPlayback {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .foregroundStyle(Color.accentColor)
+                    } else if device.isConnected {
+                        Button("Play Here") { controller.switchPlayback(to: device) }
+                            .buttonStyle(.glass)
+                            .controlSize(.small)
                     }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: symbolForDevice(named: device.name))
-                            .font(.caption)
-                            .frame(width: 16)
-                            .foregroundStyle(device.isPlayback ? Color.brand : Color.secondary)
-                        Text(device.name)
-                            .font(.caption)
-                            .lineLimit(1)
-                            .foregroundStyle(device.isConnected ? Color.primary : Color.secondary)
-                        Spacer()
-                        if !device.isPlayback && device.isConnected {
-                            Text("Play here")
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(Color.brand)
-                        }
-                    }
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
-                .disabled(!device.isConnected || device.isPlayback)
+                .font(.callout)
             }
         }
     }
 
     private var connectPrompt: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             Text(promptText)
-                .font(.caption)
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
-            Button("Connect") {
-                controller.autoConnect()
+                .frame(maxWidth: .infinity)
+            if controller.connectionState != .connecting && controller.connectionState != .initializing {
+                Button("Connect") { controller.autoConnect() }
+                    .buttonStyle(.glassProminent)
             }
-            .controlSize(.small)
-            .frame(maxWidth: .infinity)
         }
         .padding(.vertical, 6)
     }
@@ -215,36 +175,32 @@ struct CompactControlsView: View {
         }
     }
 
-    /// `spoken` carries the full name for VoiceOver and the tooltip, since the visible
-    /// captions are abbreviated to fit ("NC") or are icon-only in meaning ("Off").
-    private func compactModeButton(
-        _ label: String,
-        spoken accessibilityName: String,
-        icon: String,
-        mode: AmbientSoundMode
-    ) -> some View {
-        let current = controller.ambientSound?.mode
-        let isSelected = current == mode
-        return Button {
-            var state = controller.ambientSound ?? AmbientSoundState()
-            state.mode = mode
-            controller.setAmbientSound(state)
-        } label: {
-            VStack(spacing: 3) {
-                Image(systemName: icon).font(.system(size: 13, weight: .medium))
-                Text(label).font(.caption2)
+    /// With the Dock icon hidden, this row is the only way to reopen the main
+    /// window, reach Settings, or quit. Do not remove it.
+    private var appRow: some View {
+        HStack(spacing: 8) {
+            Button("Open XM6 Control") {
+                openWindow(id: "main")
+                NSApp.activate()
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 7)
-            .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.8))
-            .controlSurface(
-                RoundedRectangle(cornerRadius: Radius.control),
-                isSelected: isSelected
-            )
-            .contentShape(Rectangle())
+            Spacer()
+            // Not `SettingsLink`: opened from a menu bar panel it never activates the
+            // app, so the Settings window lands behind whatever app is in front.
+            Button {
+                openSettings()
+                NSApp.activate()
+            } label: {
+                Image(systemName: "gearshape")
+            }
+            .help("Settings")
+            Button {
+                NSApp.terminate(nil)
+            } label: {
+                Image(systemName: "power")
+            }
+            .help("Quit XM6 Control")
         }
-        .buttonStyle(PressableButtonStyle(scale: 0.95))
-        .accessibilityLabel(accessibilityName)
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        .buttonStyle(.glass)
+        .controlSize(.small)
     }
 }
