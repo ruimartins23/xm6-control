@@ -9,3 +9,8 @@ DerivedData/
 # Generated at build time from headphones.png (or from vector artwork when no photo
 # is present), so it does not need to be checked in.
 Sources/XM6Control/Resources/AppIcon.icns
+
+# Packaged output from Scripts/make_dmg.sh, and any built app bundle copied out of
+# .build. Distributables belong in a GitHub release, not in the source tree.
+dist/
+*.app

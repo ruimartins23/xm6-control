@@ -50,6 +50,14 @@ if [ -f "Sources/XM6Control/Resources/headphones.png" ]; then
     cp "Sources/XM6Control/Resources/headphones.png" "${APP_DIR}/Contents/Resources/headphones.png"
 fi
 
+# Strip extended attributes before signing. Finder metadata on the bundle (and the
+# download metadata the hero photo arrived with) is "detritus" to codesign: the
+# signature then fails strict verification, which is what Gatekeeper applies to a
+# downloaded copy, and the app opens as "damaged" on someone else's Mac. Some
+# provenance attributes are system-managed and can't be removed; those don't affect
+# the signature, so a failure to strip them is not an error.
+xattr -cr "${APP_DIR}" 2>/dev/null || true
+
 # No -v flag: self-signed certs report CSSMERR_TP_NOT_TRUSTED (filtered by -v)
 # yet still sign successfully.
 if security find-identity -p codesigning 2>/dev/null | grep -q "\"${SIGN_IDENTITY}\""; then
@@ -59,6 +67,13 @@ else
     echo "==> Ad-hoc code signing (create an '${SIGN_IDENTITY}' certificate to avoid permission re-prompts)..."
     codesign --force --deep --sign - "${APP_DIR}"
 fi
+
+# Fail the build rather than produce a bundle with a broken signature. Not --strict:
+# when the checkout lives in an iCloud-synced folder (Documents, Desktop), iCloud's
+# File Provider re-adds Finder metadata to the bundle the moment it is removed, which
+# strict verification rejects. That only matters for a downloaded copy, and
+# make_dmg.sh signs the distributed copy outside iCloud and verifies it strictly.
+codesign --verify --deep "${APP_DIR}"
 
 echo "==> Done: ${APP_DIR}"
 echo "    Launch with: open \"${APP_DIR}\""
