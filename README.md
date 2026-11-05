@@ -139,6 +139,7 @@ Turn on **Write a protocol debug log** in Settings (⌘,) to capture a hex trans
 | A card shows "state not reported" | That query wasn't answered; controls still work. Enable debug logging and open an issue with the log |
 | Menu bar icon missing | The app may not be running. Launch it again |
 | No Dock icon and no window | "Show only in the menu bar" is enabled. Uncheck it from the menu bar panel to get the window and Dock icon back |
+| The app quits when you close its window | XM6 Control keeps running in the menu bar when its window closes. If it quits instead, a utility with an "auto quit" feature (one that closes apps when their last window closes) is quitting it. Exclude XM6 Control in that utility |
 
 ### Stuck on "Connecting…": disconnect and reconnect
 

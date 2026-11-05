@@ -68,12 +68,12 @@ else
     codesign --force --deep --sign - "${APP_DIR}"
 fi
 
-# Fail the build rather than produce a bundle with a broken signature. Not --strict:
-# when the checkout lives in an iCloud-synced folder (Documents, Desktop), iCloud's
-# File Provider re-adds Finder metadata to the bundle the moment it is removed, which
-# strict verification rejects. That only matters for a downloaded copy, and
-# make_dmg.sh signs the distributed copy outside iCloud and verifies it strictly.
-codesign --verify --deep "${APP_DIR}"
+# No signature verification here. When the checkout lives in an iCloud-synced folder
+# (Documents, Desktop), iCloud's File Provider re-adds Finder metadata to the bundle
+# at unpredictable moments, so even a non-strict check passes or fails depending on
+# timing, which would make local builds fail at random. A local build is never
+# checked by Gatekeeper anyway. make_dmg.sh signs the copy that actually ships outside
+# iCloud and verifies that one strictly.
 
 echo "==> Done: ${APP_DIR}"
 echo "    Launch with: open \"${APP_DIR}\""
