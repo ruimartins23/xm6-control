@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import ServiceManagement
 
 /// App-level preferences, as opposed to headphone settings.
 ///
@@ -37,5 +38,32 @@ final class AppSettings: ObservableObject {
         if !menuBarOnly && openWindowIfNeeded {
             NSApp.activate(ignoringOtherApps: true)
         }
+    }
+
+    // MARK: - Open at login
+
+    /// Read back from the system rather than stored here: the user can remove the
+    /// login item in System Settings at any time, and a stored flag would then lie.
+    @Published private(set) var loginItemStatus: SMAppService.Status = SMAppService.mainApp.status
+    @Published private(set) var loginItemError: String?
+
+    var opensAtLogin: Bool { loginItemStatus == .enabled }
+
+    func refreshLoginItem() {
+        loginItemStatus = SMAppService.mainApp.status
+    }
+
+    func setOpensAtLogin(_ enabled: Bool) {
+        loginItemError = nil
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            loginItemError = error.localizedDescription
+        }
+        refreshLoginItem()
     }
 }

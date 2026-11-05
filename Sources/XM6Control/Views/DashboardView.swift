@@ -3,7 +3,6 @@ import SonyHeadphonesKit
 
 struct DashboardView: View {
     @EnvironmentObject private var controller: HeadphonesController
-    @EnvironmentObject private var settings: AppSettings
     @Environment(\.openWindow) private var openWindow
 
     /// Above this width the cards sit in two columns. Below it they stack. A single
@@ -78,21 +77,16 @@ struct DashboardView: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
 
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Toggle("Show only in the menu bar", isOn: $settings.menuBarOnly)
-                        .toggleStyle(.checkbox)
-                        .help("Hides the Dock icon. The menu bar panel stays available, and you can reopen this window from there.")
-
-                    Toggle("Debug log", isOn: $controller.protocolLoggingEnabled)
-                        .toggleStyle(.checkbox)
-                        .help("Write a hex transcript of every frame to protocol.log")
-                }
+            // App preferences live in the Settings window (also on ⌘,), rather than
+            // as checkboxes mixed in with the headphone controls.
+            HStack {
+                OpenSettingsButton()
+                    .buttonStyle(.borderless)
                 Spacer()
                 Text(footerText)
                     .foregroundStyle(.tertiary)
             }
-            .font(.caption2)
+            .font(.caption)
             .foregroundStyle(.secondary)
         }
         .padding(.top, 2)

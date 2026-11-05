@@ -6,6 +6,7 @@ import SonyHeadphonesKit
 struct XM6ControlApp: App {
     @StateObject private var controller = HeadphonesController()
     @StateObject private var settings = AppSettings()
+    @StateObject private var profiles = EqualizerProfileStore()
 
     init() {
         ProbeMode.runIfRequested()
@@ -16,6 +17,7 @@ struct XM6ControlApp: App {
             ContentView()
                 .environmentObject(controller)
                 .environmentObject(settings)
+                .environmentObject(profiles)
                 .frame(minWidth: 380, idealWidth: 420, minHeight: 560, idealHeight: 680)
                 .onAppear {
                     // The stored preference has to be pushed onto NSApp once the app is
@@ -41,6 +43,7 @@ struct XM6ControlApp: App {
             CompactControlsView()
                 .environmentObject(controller)
                 .environmentObject(settings)
+                .environmentObject(profiles)
         } label: {
             MenuBarIcon()
         }
@@ -51,8 +54,16 @@ struct XM6ControlApp: App {
             DesktopWidgetView()
                 .environmentObject(controller)
                 .environmentObject(settings)
+                .environmentObject(profiles)
         }
         .windowResizability(.contentSize)
         .defaultPosition(.topTrailing)
+
+        // Standard Settings window: gives the app menu its "Settings\u{2026}" item and ⌘,.
+        Settings {
+            SettingsView()
+                .environmentObject(controller)
+                .environmentObject(settings)
+        }
     }
 }

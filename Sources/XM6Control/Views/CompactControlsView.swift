@@ -6,6 +6,7 @@ import SonyHeadphonesKit
 struct CompactControlsView: View {
     @EnvironmentObject private var controller: HeadphonesController
     @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var profileStore: EqualizerProfileStore
     @Environment(\.openWindow) private var openWindow
     /// Extra chrome (drag hint + close) shown only in the desktop-widget window.
     var isDesktopWidget = false
@@ -54,6 +55,8 @@ struct CompactControlsView: View {
                 Button("Widget") {
                     openWindow(id: "desktop-widget")
                 }
+                OpenSettingsButton(title: "Settings")
+                    .labelStyle(.titleOnly)
                 Spacer()
                 Button("Quit") {
                     NSApp.terminate(nil)
@@ -147,6 +150,16 @@ struct CompactControlsView: View {
                 ForEach(EqualizerPreset.allCases) { preset in
                     Button(preset.label) { controller.setEqualizerPreset(preset) }
                 }
+                // Saved profiles sit alongside the presets so they can be switched
+                // without opening the main window.
+                if !profileStore.profiles.isEmpty {
+                    Divider()
+                    Section("Profiles") {
+                        ForEach(profileStore.profiles) { profile in
+                            Button(profile.name) { controller.setEqualizerBands(profile.bands) }
+                        }
+                    }
+                }
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
@@ -155,8 +168,7 @@ struct CompactControlsView: View {
     }
 
     private var currentEqualizerLabel: String {
-        guard let equalizer = controller.equalizer else { return EqualizerPreset.off.label }
-        return equalizer.preset?.label ?? "Personalized"
+        profileStore.displayName(for: controller.equalizer)
     }
 
     private func devicesRow(_ devices: [MultipointDevice]) -> some View {

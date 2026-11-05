@@ -3,6 +3,7 @@ import SonyHeadphonesKit
 
 struct HeaderView: View {
     @EnvironmentObject private var controller: HeadphonesController
+    @EnvironmentObject private var profileStore: EqualizerProfileStore
 
     /// Side-by-side in a wide window, stacked in a narrow one. Stacked artwork in a
     /// wide window leaves a broad empty band either side of it.
@@ -72,8 +73,8 @@ struct HeaderView: View {
             if let listening = controller.listeningMode {
                 glanceRow("Listening", listening.label)
             }
-            if let preset = controller.equalizer {
-                glanceRow("Equalizer", preset.preset?.label ?? "Personalized")
+            if controller.equalizer != nil {
+                glanceRow("Equalizer", profileStore.displayName(for: controller.equalizer))
             }
             if let playing = controller.devices?.first(where: { $0.isPlayback })?.name {
                 glanceRow("Playing on", playing)
