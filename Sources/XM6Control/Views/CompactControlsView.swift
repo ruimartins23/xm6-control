@@ -49,8 +49,8 @@ struct CompactControlsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Button("Open App") {
-                    openWindow(id: "main")
-                    NSApp.activate(ignoringOtherApps: true)
+                    // Shows the dashboard that is already open rather than a copy.
+                    MainWindowTracker.shared.show(using: openWindow)
                 }
                 Button("Widget") {
                     openWindow(id: "desktop-widget")

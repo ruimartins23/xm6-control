@@ -39,6 +39,9 @@ struct ContentView: View {
             .transition(.opacity.combined(with: .offset(y: 10)))
             .animation(Motion.sceneChange, value: scenePhase)
         }
+        // Registers this window as the dashboard, so reopening the app brings it
+        // forward instead of creating a second one.
+        .background(WindowReader { MainWindowTracker.shared.window = $0 })
         // No explicit tint: selection follows the user's System Settings accent,
         // which is what every other Mac app does.
         .onAppear {
