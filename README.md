@@ -18,6 +18,7 @@
 | Listening Mode (Standard / Background Music / Cinema) | ✅ including BGM room size (My Room / Living Room / Cafe) |
 | Equalizer presets (Off, Heavy, Clear, Hard, Soft, Custom) | ✅ XM6-native preset codes |
 | Custom equalizer | ✅ ten band faders, written live as you drag |
+| Equalizer profiles | ✅ save as many named curves as you like and switch between them, from the window or the menu bar |
 | Battery level + charging status | ✅ live updates |
 | Multipoint device list with names | ✅ shows all connected devices |
 | Playback source switching ("Play here") | ✅ one click |
@@ -27,6 +28,7 @@
 | Menu bar quick controls | ✅ full control without opening the app |
 | Floating desktop widget | ✅ draggable, all-Spaces, remembers position |
 | Menu-bar-only mode | ✅ optional, hides the Dock icon; on by choice, not by default |
+| Open at login | ✅ one switch in Settings |
 | Light and dark appearance | ✅ every surface tone resolves per system appearance |
 | Adaptive layout | ✅ two columns in a wide window, one in a narrow one |
 
@@ -38,24 +40,49 @@ The app is **event-driven**: 0% CPU at idle, no polling, negligible battery impa
 - Xcode Command Line Tools (`xcode-select --install`). Full Xcode is not required
 - A Sony WH-1000XM6 paired in **System Settings → Bluetooth**
 
-## Build & Run
+## Install
+
+Build the installer:
 
 ```sh
-git clone <this-repo>
+git clone https://github.com/ruimartins23/xm6-control.git
 cd xm6-control
+./Scripts/make_dmg.sh
+```
+
+That produces `dist/XM6-Control-1.0.dmg`. Open it and drag **XM6 Control** onto the **Applications** shortcut, the same way you would install any Mac app. To have it start with your Mac, turn on **Open at login** in Settings (⌘,).
+
+On first launch macOS asks for Bluetooth permission. Click **Allow**. Make sure the headphones are powered on and connected as an audio device before hitting **Try Again** if the first connection races.
+
+### Opening a copy someone else built
+
+The app is signed, but not with an Apple Developer ID or notarized by Apple, so on another Mac the first open of a downloaded copy is blocked with a warning that Apple can't check it. To allow it once:
+
+- **macOS 15 and later:** try to open the app, then go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**.
+- **macOS 13 and 14:** Control-click the app in Applications, choose **Open**, then **Open** again.
+
+You only need to do this the first time. Building it yourself with the steps above avoids the warning entirely, since macOS only checks apps that were downloaded.
+
+## Build & Run (development)
+
+```sh
 ./Scripts/build_app.sh
 open ".build/XM6 Control.app"
 ```
 
-That's it. The script builds with SwiftPM, packages a double-clickable `.app`, generates the app icon, and signs the bundle. Drag `XM6 Control.app` to `/Applications` if you want it permanent, and add it to **System Settings → General → Login Items** to start it at login.
-
-On first launch macOS asks for Bluetooth permission. Click **Allow**. Make sure the headphones are powered on and connected as an audio device before hitting **Try Again** if the first connection races.
+The script builds with SwiftPM, packages a double-clickable `.app`, generates the app icon, and signs the bundle. `make_dmg.sh` runs it for you, then packages a clean, strictly verified copy of the result.
 
 ### Window or menu bar
 
 By default XM6 Control behaves like a normal Mac app: a Dock icon, and a window when you open it. The menu bar panel is always there too, so quick changes never need the window.
 
-If you would rather it stay out of the way entirely, tick **Show only in the menu bar** at the bottom of the window. That drops the Dock icon and the app-switcher entry, and the menu bar panel becomes the whole interface. The same checkbox lives in that panel, so unticking it brings the window and Dock icon back.
+If you would rather it stay out of the way entirely, turn on **Show only in the menu bar** in Settings (⌘,). That drops the Dock icon and the app-switcher entry, and the menu bar panel becomes the whole interface. The same option lives in that panel, so unticking it brings the window and Dock icon back.
+
+### Equalizer profiles
+
+The headphones hold a single custom curve. Profiles live in the app instead, so you can keep as many as you want: applying one writes its curve into that slot. Shape a curve with the faders (or start from any preset), click **Save Current…**, and give it a name. Right-click a profile to rename it, overwrite it with the current curve, or delete it. Profiles also appear in the equalizer menu of the menu bar panel.
+
+Three starters are included (Bass Boost, Vocal, Treble Boost). They are broad tilts shaped by band position, since the headphones don't publish each band's centre frequency; delete them if you don't want them, and they stay deleted.
 
 ### Avoiding permission re-prompts across rebuilds
 
@@ -99,7 +126,7 @@ Sources/
 
 The XM6 speaks Sony's proprietary MDR protocol over RFCOMM (service UUID `96CC203E-5068-46ad-B32D-E316F5E069BA`): framed messages with an alternating sequence bit, per-frame ACKs, and two independent opcode tables. The XM6 generation moved several features to new command families relative to older 1000X models: the equalizer answers a different inquired type, wearing detection moved to the SYSTEM family, and multipoint management lives on the second message table. All command layouts used here were verified against a live WH-1000XM6 (firmware 3.x) via the built-in protocol log.
 
-Enable **Debug logging** at the bottom of the main window to capture a hex transcript of every frame at `~/Library/Application Support/XM6 Control/protocol.log`. That transcript is what makes adding features or supporting new firmware practical.
+Turn on **Write a protocol debug log** in Settings (⌘,) to capture a hex transcript of every frame at `~/Library/Application Support/XM6 Control/protocol.log`; **Show in Finder** next to it takes you there. That transcript is what makes adding features or supporting new firmware practical.
 
 ## Troubleshooting
 
